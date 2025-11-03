@@ -12,9 +12,24 @@ class RctaPerception:
         print("Strating RctaPerception..")
         self.detector = ObjectDetector()
 
-        self.perception_data = {'rear': [], 'left': float('inf'), 'right': float('inf')}
-        self.detected_objects = {'rear': [], 'left': [], 'right': []}
+        self.perception_data = {
+            'rear': [],
+            'left': {'dist': float('inf'), 'ttc': float('inf')},
+            'right': {'dist': float('inf'), 'ttc': float('inf')}
+        }
+
+        self.detected_objects = {
+            'rear': [],
+            'left': [],
+            'right': []
+        }
+
         self.current_frames = {'rear': None, 'left': None, 'right': None}
+
+        self.previous_data = {
+            'left' : {'dist': float('inf'), 'time': 0.0},
+            'right': {'dist': float('inf'), 'time': 0.0}
+        }
 
     def _process_rgb_image(self, carla_image):
         """
@@ -47,6 +62,52 @@ class RctaPerception:
 
         return distance_meters, display_frame
 
+    def _calculate_dynamic_ttc(self, depth_map, carla_image ,camera_side):
+        """
+         Calculate TTC in dynamic mode, based on distance variation
+        """
+
+        # --- NUOVA SOLUZIONE: ROI ---
+        # Ottieni le dimensioni dell'immagine
+        height = depth_map.shape[0]
+
+        # Definisci la tua ROI: ignora il 25% superiore e il 25% inferiore
+        roi_top = int(height * 0.25)
+        roi_bottom = int(height * 0.75)
+
+        # "Ritaglia" la mappa di profondità solo alla tua ROI
+        roi_depth_map = depth_map[roi_top:roi_bottom, :]
+
+        # Calcola la distanza minima SOLO in quella regione
+        if roi_depth_map.size > 0:
+            current_dist = np.min(roi_depth_map)
+        else:
+            current_dist = float('inf')  # Se la ROI è vuota, nessuna distanza
+        # --- FINE SOLUZIONE ---
+
+        #current_dist = np.min(depth_map)
+        current_time = carla_image.timestamp
+
+        prev_dist = self.previous_data[camera_side]['dist']
+        prev_time = self.previous_data[camera_side]['time']
+
+        ttc = float('inf')
+
+        if prev_time > 0.0:
+            delta_t = current_time -prev_time
+            delta_d = prev_dist - current_dist
+            if delta_t > 0.01:
+                v_relative = delta_d/delta_t  #m/s
+                if v_relative > 0.1:  #soglia per evitare rumore
+                    ttc = current_dist / v_relative
+                else:
+                    #ci stiamo allontanando
+                    ttc = float('inf')
+        self.previous_data[camera_side]['dist'] = current_dist
+        self.previous_data[camera_side]['time'] = current_time
+
+        return current_dist, ttc
+
     def rear_cam_callback(self, image):
         np_image = self._process_rgb_image(image)
         self.detected_objects['rear'] = self.detector.detect(np_image)
@@ -55,26 +116,34 @@ class RctaPerception:
     def left_cam_callback(self, image):
         """left depth camera callback"""
         depth_map, display_frame = self._process_depth_image(image)
-        # Trova la distanza minima rilevata da questa telecamera
-        min_distance = np.min(depth_map)
-        self.perception_data['left'] = min_distance
+        dist, ttc = self._calculate_dynamic_ttc(depth_map, image, 'left')
+
+        # Salva entrambi i valori
+        self.perception_data['left'] = {'dist': dist, 'ttc': ttc}
         self.current_frames['left'] = display_frame
 
     def right_cam_callback(self, image):
         """right depth camera callback"""
         depth_map, display_frame = self._process_depth_image(image)
-        # Trova la distanza minima rilevata da questa telecamera
-        min_distance = np.min(depth_map)
-        self.perception_data['right'] = min_distance
+        # Calcola dinamicamente dist e ttc
+        dist, ttc = self._calculate_dynamic_ttc(depth_map, image, 'right')
+
+        # Salva entrambi i valori
+        self.perception_data['right'] = {'dist': dist, 'ttc': ttc}
         self.current_frames['right'] = display_frame
 
     def get_perception_data(self):
         """
-        Restituisce un dizionario con tutti i dati di percezione:
+        Return a dictionary
         {
             'rear': [lista_rilevamenti_yolo],
-            'left': distanza_minima_float,
-            'right': distanza_minima_float
+            'left': {'dist': N, 'ttc': N},
+            'right': {'dist': N, 'ttc': N}
         }
         """
+        # NOTA: non resettiamo i valori qui.
+        # I callback li sovrascriveranno continuamente.
+        # Se un oggetto scompare, il 'min_distance' diventerà 'inf'
+        # e il calcolo del TTC risulterà 'inf'
+        self.perception_data['rear'] = self.detected_objects['rear']
         return self.perception_data

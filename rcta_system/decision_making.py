@@ -32,22 +32,16 @@ class DecisionMaker:
             dangerous_alerts.extend(list(rear_classes))
 
         # Left depth camera
-        left_distance = perception_data.get('left', float('inf'))
-        if left_distance < 100.0:
-            # TTC = Distanza (m) / Velocità (m/s)
-            ttc_left = left_distance / self.cross_speed
-
-            if ttc_left < self.ttc_threshold:
-                # print(f"PERICOLO SINISTRA: TTC {ttc_left:.2f}s")
-                dangerous_alerts.append("depth_left")
+        ttc_left = perception_data['left']['ttc']
+        if ttc_left < self.ttc_threshold:
+            # print(f"PERICOLO SINISTRA: TTC {ttc_left:.2f}s")
+            dangerous_alerts.append("depth_left")
 
         # Right depth camera
-        right_distance = perception_data.get('right', float('inf'))
-        if right_distance < 100.0:
-            ttc_right = right_distance / self.cross_speed
+        ttc_right = perception_data['right']['ttc']
 
-            if ttc_right < self.ttc_threshold:
-                # print(f"PERICOLO DESTRA: TTC {ttc_right:.2f}s")
-                dangerous_alerts.append("depth_right")
+        if ttc_right < self.ttc_threshold:
+            # print(f"PERICOLO DESTRA: TTC {ttc_right:.2f}s")
+            dangerous_alerts.append("depth_right")
 
         return list(set(dangerous_alerts))

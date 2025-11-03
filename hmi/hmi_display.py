@@ -39,13 +39,11 @@ def _on_message(client, userdata, msg):
 
         if data.get("alert") == True:
             objects = data.get("objects", [])
-            print("\n" + "=" * 30)
-            print("   --- ! RCTA SYSTEM ! ---")
-            print(f"     Detected danger: {', '.join(objects)}")
-            print("=" * 30 + "\n")
+            print(f" Detected danger: {', '.join(objects)}")
+            print("\n")
 
-        elif data.get("alert") == False:
-            print("--- RCTA: safe ---")
+        #elif data.get("alert") == False:
+        #    print("--- RCTA: safe ---")
 
     except json.JSONDecodeError:
         print(f"HMI Display: message received (not JSON): {msg.payload.decode()}")

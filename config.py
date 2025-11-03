@@ -20,7 +20,7 @@ MAP_NAME = 'Town05'
 #EGO vehicle
 EGO_VEHICLE_MODEL = 'vehicle.audi.tt'
 EGO_SPAWN_TRANSFORM = carla.Transform(
-    carla.Location(x=-30.0, y=-30, z=0.5),
+    carla.Location(x=-31.0, y=-30, z=0.5),
     carla.Rotation(yaw=0)  #ready to reverse direction (retromarcia)
 )
 
@@ -56,12 +56,12 @@ TARGET_SPAWN_TRANSFORM = carla.Transform(
 TARGET_VELOCITY = carla.Vector3D(x=0, y=2.0, z=0)
 
 #target vehicle
-PEDESTRIAN_MODEL = 'walker.pedestrian.0001'
+PEDESTRIAN_MODEL = 'walker.pedestrian.0002'
 PEDESTRIAN_SPAWN_TRANSFORM = carla.Transform(
-    carla.Location(x=-35.0, y=-40.0, z=0.5),
+    carla.Location(x=-31.4, y=-40.0, z=0.5),
     carla.Rotation(yaw =90)
 )
-PEDESTRIAN_DESTINATION = carla.Location(x=-35.0, y=-27.0, z=0.5)
+PEDESTRIAN_DESTINATION = carla.Location(x=-31.4, y=-30.2, z=0.5)
 PEDESTRIAN_WALK_SPEED = 1.4
 
 #_____________________________________CAMERAS SETTING________________________
@@ -79,13 +79,13 @@ REAR_CAMERA_TRANSFORM = carla.Transform(
 RCTA_CAMERA_FOV = "110"
 
 RCTA_LEFT_CAMERA_TRANSFORM = carla.Transform(
-    carla.Location(x=-2.0, y=-0.9, z=0.5),
-    carla.Rotation(yaw =-135)
+    carla.Location(x=-2.0, y=-0.9, z=1.0),
+    carla.Rotation(pitch=20.0,yaw =-135)
 )
 
 RCTA_RIGHT_CAMERA_TRANSFORM = carla.Transform(
-    carla.Location(x=-2.0, y=0.9, z=0.5),
-    carla.Rotation(yaw=135)
+    carla.Location(x=-2.0, y=0.9, z=1.0),
+    carla.Rotation(pitch=20.0,yaw=135)
 )
 
 YOLO_MODEL_PATH = 'models/yolov8n.pt'

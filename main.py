@@ -119,8 +119,8 @@ def main():
 
                 if frames['left'] is not None:
                     display_left = frames['left'].copy()
-                    dist_left = perception_data['left']
-                    ttc_left = dist_left / config.CROSS_TRAFFIC_SPEED_MS
+                    dist_left = perception_data['left']['dist']
+                    ttc_left = perception_data['left']['ttc']
                     is_alert_left = "depth_left" in dangerous_objects_list
 
                     draw_depth_info(display_left, dist_left, ttc_left, is_alert_left)
@@ -128,8 +128,8 @@ def main():
 
                 if frames['right'] is not None:
                     display_right = frames['right'].copy()
-                    dist_right = perception_data['right']
-                    ttc_right = dist_right / config.CROSS_TRAFFIC_SPEED_MS
+                    dist_right = perception_data['right']['dist']
+                    ttc_right = perception_data['right']['ttc']
                     is_alert_right = "depth_right" in dangerous_objects_list
 
                     draw_depth_info(display_right, dist_right, ttc_right, is_alert_right)
