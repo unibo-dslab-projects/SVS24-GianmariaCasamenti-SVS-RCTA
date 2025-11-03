@@ -25,4 +25,4 @@ class CarlaManager:
             if actor.is_alive:
                 print(f"Destroying actor {actor.type_id}")
                 actor.destroy()
-        print("cleanup completed")
+        print("Clean up completed")

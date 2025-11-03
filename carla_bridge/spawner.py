@@ -37,30 +37,6 @@ class Spawner:
             print(f"ERROR: Spawn failed, model: {model}")
         return vehicle
 
-
-    def spawn_radar(self, parent_vehicle):
-        """Spawn radar according to the model at a specific random point"""
-        radar_bp = self.blueprint_library.find('sensor.other.radar')
-        radar_bp.set_attribute('horizontal_fov', str(config.RADAR_HORIZONTAL_FOV))
-        radar_bp.set_attribute('vertical_fov', str(config.RADAR_VERTICAL_FOV))
-        radar_bp.set_attribute('points_per_second', str(config.RADAR_POINTS_PER_SECOND))
-        radar_bp.set_attribute('range', str(config.RADAR_RANGE))
-
-        radar_transform = carla.Transform(carla.Location(x=2.5, z=1.0))
-        radar_sensor = self.world.spawn_actor(
-            radar_bp,
-            radar_transform,
-            attach_to=parent_vehicle
-        )
-
-        if radar_sensor:
-            print("Radar sensor spawned and attached to vehicle")
-            self.actor_list.append(radar_sensor)
-        else:
-            print("ERROR: Radar sensor spawn failed")
-
-        return radar_sensor
-
     def spawn_pedestrian(self, model, spawn_point, destination, speed):
         """
         Creates a pedestrian and set it to walk.

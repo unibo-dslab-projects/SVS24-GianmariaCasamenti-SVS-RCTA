@@ -7,7 +7,6 @@ from carla_bridge.carla_manager import CarlaManager
 from carla_bridge.spawner import Spawner
 from carla_bridge.sensor_manager import SensorManager
 from scenarios.parking_lot_scenario import setup_parking_scenario, setup_parking_scenario_with_pedestrian
-from rcta_system.perception import RctaPerception
 
 from rcta_system.perception import RctaPerception
 from rcta_system.decision_making import DecisionMaker

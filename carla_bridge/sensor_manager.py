@@ -62,8 +62,6 @@ class SensorManager:
         else:
             print(f"Error, spawn left camera failed")
 
-
-
         return(
            rear_camera,
            left_rcta_camera,
