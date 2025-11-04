@@ -1,16 +1,21 @@
 import carla
 import time
 import cv2
+import pygame
 import config
 
 from carla_bridge.carla_manager import CarlaManager
 from carla_bridge.spawner import Spawner
 from carla_bridge.sensor_manager import SensorManager
+
 from scenarios.parking_lot_scenario import setup_parking_scenario, setup_parking_scenario_with_pedestrian
 
 from rcta_system.perception import RctaPerception
 from rcta_system.decision_making import DecisionMaker
+
 from hmi.mqtt_publisher import MqttPublisher
+
+from controller.keyboard_controller import KeyboardController
 
 def draw_detections(image, detections):
     """
@@ -43,6 +48,11 @@ def draw_depth_info(image, distance, ttc, is_alert):
                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
 
 def main():
+    pygame.init()
+    # Crea una piccola finestra solo per catturare l'input
+    pygame.display.set_mode((200, 100))
+    pygame.display.set_caption('Controller Input')
+
     try:
         with CarlaManager() as manager:
             #load map
@@ -75,6 +85,10 @@ def main():
             )
             mqtt_publisher.connect()
 
+            #initialize controller
+            print("Initializing controller")
+            controller = KeyboardController()
+
             # Initialize perception and cameras
             rear_cam, left_cam, right_cam = sensor_manager.setup_rcta_cameras(ego_vehicle)
             if not (rear_cam and left_cam and right_cam):
@@ -89,18 +103,40 @@ def main():
 
             #Initialize setting spectator's view
             spectator = manager.world.get_spectator()
-            spectator_transform = carla.Transform(
-                config.EGO_SPAWN_TRANSFORM.location + carla.Location(x=20, y=10, z=10.0),
-                carla.Rotation(pitch=-45, yaw=-150)
-            )
-            spectator.set_transform(spectator_transform)
+            #spectator_transform = carla.Transform(
+            #    config.EGO_SPAWN_TRANSFORM.location + carla.Location(x=20, y=10, z=10.0),
+            #    carla.Rotation(pitch=-45, yaw=-150)
+            #)
+            #spectator.set_transform(spectator_transform)
 
             time.sleep(1.0)
 
             while True:
                 manager.world.tick()
 
-                is_reversing = True
+                #spectator view
+                ego_transform = ego_vehicle.get_transform()
+                spectator_location = (ego_transform.location +
+                    ego_transform.get_forward_vector() * (-15)
+                    +carla.Location(z=10))
+                spectator_rotation = carla.Rotation(pitch=-45, yaw=ego_transform.rotation.yaw)
+                spectator.set_transform(carla.Transform(spectator_location, spectator_rotation))
+
+                #controller integration
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        running = False
+                # Ottieni lo stato di *tutti* i tasti
+                keys = pygame.key.get_pressed()
+
+                # Controlla il tasto 'Q' per uscire
+                if keys[pygame.K_q]:
+                    running = False
+                    break
+                # Invia l'array di tasti al controller
+                control = controller.parse_input(keys)
+                ego_vehicle.apply_control(control)
+                is_reversing = control.reverse
 
                 perception_data = perception_system.get_perception_data()
                 dangerous_objects_list = decision_maker.evaluate(
@@ -136,8 +172,12 @@ def main():
                     cv2.imshow('Right RCTA Camera (Depth)', display_right)
 
                 # Premi 'q' per chiudere le finestre OpenCV e uscire
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
+                #if cv2.waitKey(1) & 0xFF == ord('q'):
+                #    break
+
+                cv2.waitKey(1)
+                # Aggiorna la finestra di Pygame (necessario)
+                pygame.display.flip()
 
     except KeyboardInterrupt:
         print("\nScript interrotto dall'utente.")

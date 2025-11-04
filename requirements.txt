@@ -1,27 +1,11 @@
-# Simulatore CARLA
 carla==0.9.15
-
-# Calcolo numerico (richiesto da opencv e torch)
 numpy==1.21.6
-
-# Elaborazione immagini (per cv2.imshow e conversione)
 opencv-python==4.11.0.86
-
-# Framework di Deep Learning (per YOLO)
 torch==1.13.1
 torchvision==0.14.1
-
-# Libreria YOLO
 ultralytics==8.0.145
-
-# Formattazione output di YOLO
 pandas==1.3.5
-
-# Comunicazione per HMI
 paho-mqtt==2.1.0
-
-# Dipendenza di ultralytics (config)
 PyYAML==6.0.1
-
-# Patch per compatibilità OpenSSL (che abbiamo aggiunto)
 urllib3<2.0
+pygame==2.6.1

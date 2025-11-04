@@ -1,4 +1,5 @@
 import  carla
+import pygame
 
 class KeyboardController:
     """
@@ -17,7 +18,7 @@ class KeyboardController:
         self._steer_increment = 0.05
         self._steer = 0.0
 
-    def parse_input(self, key):
+    def parse_input(self, keys):
         """
         Take a pressed button and update a Carla vehicle
         Return object updated
@@ -27,24 +28,26 @@ class KeyboardController:
         self._control.brake = 0.0
         self._control.reverse = False
 
-        #accelerazione, retro,  freno
-        if key == ord('w'):
+        # Accelerazione / Retromarcia
+        if keys[pygame.K_UP]:
             self._control.throttle = self._throttle
-        elif key == ord('s'):
+        elif keys[pygame.K_DOWN]:
             self._control.throttle = self._throttle
             self._control.reverse = True
-        elif key == ord(' '):
+
+        # Freno
+        if keys[pygame.K_SPACE]:
             self._control.brake = 1.0
 
-        #sterzo
-        if key == ord('a'):
+        # Sterzo (accumulativo, con auto-centramento)
+        if keys[pygame.K_LEFT]:
             # Sterza a sinistra
             self._steer = max(self._steer - self._steer_increment, -1.0)
-        elif key == ord('d'):
+        elif keys[pygame.K_RIGHT]:
             # Sterza a destra
             self._steer = min(self._steer + self._steer_increment, 1.0)
         else:
-            # Auto-centra lo sterzo se non si preme A o D
+            # Auto-centra lo sterzo se non si preme SX o DX
             if self._steer > 0.0:
                 self._steer = max(self._steer - self._steer_increment, 0.0)
             elif self._steer < 0.0:
