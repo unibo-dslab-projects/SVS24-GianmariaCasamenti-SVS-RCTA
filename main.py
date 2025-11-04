@@ -64,13 +64,12 @@ def main():
 
             #initialize spawner
             spawner = Spawner(manager.world, manager.actor_list)
-            ego_vehicle, target_vehicle = setup_parking_scenario(manager.world, spawner)
+            #ego_vehicle, target_vehicle = setup_parking_scenario(manager.world, spawner)
+            #if not ego_vehicle or not target_vehicle:
+            #    print("Error, scenario creation failed")
+            #    return
 
-            if not ego_vehicle or not target_vehicle:
-                print("Error, scenario creation failed")
-                return
-
-            #ego_vehicle = setup_parking_scenario_with_pedestrian(manager.world, spawner)
+            ego_vehicle = setup_parking_scenario_with_pedestrian(manager.world, spawner)
 
             print("Initializing Perception and Sensor Manager...")
             perception_system = RctaPerception()
