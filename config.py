@@ -69,22 +69,22 @@ CAMERA_IMAGE_WIDTH = 416 #640
 CAMERA_IMAGE_HEIGHT = 416 #384
 
 
-REAR_CAMERA_FOV = "90"
+REAR_CAMERA_FOV = "110"
 REAR_CAMERA_TRANSFORM = carla.Transform(
-    carla.Location(x=-2.0, y=0.0, z=1.0),
-    carla.Rotation(yaw =180)
+    carla.Location(x=-2.0, y=0.0, z=0.9),
+    carla.Rotation(pitch=10.0,yaw =180)
 )
 
 
 RCTA_CAMERA_FOV = "110"
 
 RCTA_LEFT_CAMERA_TRANSFORM = carla.Transform(
-    carla.Location(x=-2.0, y=-0.9, z=1.0),
+    carla.Location(x=-2.0, y=-0.5, z=0.9),
     carla.Rotation(pitch=20.0,yaw =-135)
 )
 
 RCTA_RIGHT_CAMERA_TRANSFORM = carla.Transform(
-    carla.Location(x=-2.0, y=0.9, z=1.0),
+    carla.Location(x=-2.0, y=0.5, z=0.9),
     carla.Rotation(pitch=20.0,yaw=135)
 )
 

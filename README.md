@@ -10,7 +10,7 @@ The project deliverables include:
 * **Live Demo**: A working demonstration of the system in the simulator.
 * **Warning System**: Implemented via **MQTT** messages.
 
-![image](docs/schema-RCTA.png)
+![image](docs/Side.png)
 ![image](docs/example.png)
 
 ## Command
