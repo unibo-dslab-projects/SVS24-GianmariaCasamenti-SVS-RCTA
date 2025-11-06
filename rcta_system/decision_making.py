@@ -3,39 +3,32 @@ import config
 
 class DecisionMaker:
     """
-    Analizza i dati di percezione (da tutti e 3 i canali RGBD) e lo stato del veicolo
-    per determinare se ci sono oggetti pericolosi.
+    Analyze perception data from all 3 RGBD channel and vehicle state,
+    to determinate dangerous object
     """
 
     def __init__(self):
-        print("DecisionMaker initialized.")
+        print("DECISION_MAKER [initialized.]")
         self.ttc_threshold = config.TTC_THRESHOLD
-        # Soglia di distanza minima per considerare un oggetto pericoloso anche senza TTC basso
-        self.min_dist_threshold = 5.0
+        self.dist_threshold = config.DIST_THRESHOLD
 
     def evaluate(self, perception_data_all_channels, is_reversing):
         """
-        Valuta il pericolo basandosi sui dati di tutti i canali.
+        Evaluates the danger based on data from all channels.
 
-        :param perception_data_all_channels: Dizionario { 'rear': {...}, 'left': {...}, 'right': {...} }
-        :param is_reversing: Booleano, true se il veicolo sta andando in retromarcia.
-        :return: Lista di stringhe che descrivono i pericoli (es. ['rear:car', 'left:approaching']).
+        :param perception_data_all_channels: Dictionary { “rear”: {...}, “left”: {...}, “right”: {...} }
+        :param is_reversing: Boolean, true if the vehicle is reversing.
+        :return: List of strings describing the hazards (e.g. [“rear:car”, “left:approaching”]).
         """
         dangerous_alerts = []
-
-        # Se non siamo in retromarcia, per ora assumiamo nessun pericolo RCTA
         if not is_reversing:
             return []
 
         for side, data in perception_data_all_channels.items():
-            # 1. Controllo TTC del settore (veicoli in avvicinamento veloce)
             if data['ttc'] < self.ttc_threshold:
                 dangerous_alerts.append(f"{side}:approaching_fast")
 
-            # 2. Controllo oggetti statici o lenti molto vicini
-            # Se la distanza minima del settore è inferiore alla soglia
-            elif data['dist'] < self.min_dist_threshold:
-                # Cerchiamo quale tipo di oggetto è vicino
+            elif data['dist'] < self.dist_threshold:
                 closest_obj_type = "unknown"
                 min_obj_dist = float('inf')
 
@@ -45,7 +38,7 @@ class DecisionMaker:
                         min_obj_dist = obj['dist']
                         closest_obj_type = obj['class']
 
-                if min_obj_dist < self.min_dist_threshold:
+                if min_obj_dist < self.dist_threshold:
                     dangerous_alerts.append(f"{side}:{closest_obj_type}_near")
 
         return list(set(dangerous_alerts))

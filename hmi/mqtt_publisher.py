@@ -20,28 +20,28 @@ class MqttPublisher:
 
     def _on_connect(self, client, userdata, flags, reason_code, properties):
         if reason_code == 0:
-            print(f"HMI Publisher: Connected to the broker {self.broker_address}")
+            print(f"HMI_PUBLISHER [Connected to the broker {self.broker_address}]")
             self.is_connected = True
         else:
-            print(f"HMI Publisher: Connection failed: {reason_code}")
+            print(f"HMI_PUBLISHER [Connection failed: {reason_code}]")
 
     def _on_disconnect(self, client, userdata, flags, reason_code, properties):
         self.is_connected = False
         if reason_code != 0:
-            print(f"HMI Publisher: Disconnessione inaspettata: {reason_code}")
+            print(f"HMI_PUBLISHER [Unexpected error: {reason_code}")
         else:
-            print("HMI Publisher: Disconnected to the broker.")
+            print("HMI_PUBLISHER [Disconnected to the broker]")
 
     def connect(self):
         """Try to connect to the broker."""
         try:
-            print(f"HMI Publisher: connection attempt  {self.broker_address}:{self.port}...")
+            print(f"HMI_PUBLISHER [connection attempt  {self.broker_address}:{self.port}]")
             self.client.connect(self.broker_address, self.port, 60)
             self.client.loop_start()  # Gestisce la riconnessione e il traffico in background
         except ConnectionRefusedError:
-            print(f"ERROR: Rejected connection to broker {self.broker_address}")
+            print(f"HMI_PUBLISHER [ERROR: Rejected connection to broker {self.broker_address}]")
         except Exception as e:
-            print(f"ERROR: Impossible to connect: {e}")
+            print(f"HMI_PUBLISHER [ERROR: Impossible to connect: {e}]")
 
     def disconnect(self):
         """Disconnect from the broker."""
@@ -71,9 +71,9 @@ class MqttPublisher:
         payload_str = json.dumps(payload)
         result = self.client.publish(self.topic, payload_str)
 
-        # Controllo di debug
+        #Debug
         if result[0] != 0:
-            print(f"HMI Publisher: Errore nel pubblicare il messaggio (Codice: {result[0]})")
+            print(f"HMI_PUBLISHER [Publishing error: {result[0]}]")
         # else:
         #     if payload['alert']:
         #         print(f"HMI Publisher: Messaggio di ALLARME pubblicato.")

@@ -1,6 +1,5 @@
 import carla
 import random
-import config
 
 class Spawner:
     """Handles the generation of actors"""

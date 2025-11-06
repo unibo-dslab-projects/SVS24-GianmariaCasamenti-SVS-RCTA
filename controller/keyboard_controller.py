@@ -1,6 +1,9 @@
 import  carla
 import pygame
 
+import config
+
+
 class KeyboardController:
     """
     Basic controller for keyboard WASD
@@ -10,12 +13,11 @@ class KeyboardController:
     - A: Turn left
     - D: Turn right
     - Space bar: Brake
-    - Q: Exit simulation (managed in main)
     """
     def __init__(self):
         self._control = carla.VehicleControl()
-        self._throttle = 0.7
-        self._steer_increment = 0.05
+        self._throttle = config.THROTTLE
+        self._steer_increment = config.STEER_INCREMENT
         self._steer = 0.0
 
     def parse_input(self, keys):
@@ -39,22 +41,17 @@ class KeyboardController:
         if keys[pygame.K_SPACE]:
             self._control.brake = 1.0
 
-        # Sterzo (accumulativo, con auto-centramento)
+        # Sterzo
         if keys[pygame.K_LEFT]:
-            # Sterza a sinistra
             self._steer = max(self._steer - self._steer_increment, -1.0)
         elif keys[pygame.K_RIGHT]:
-            # Sterza a destra
             self._steer = min(self._steer + self._steer_increment, 1.0)
         else:
-            # Auto-centra lo sterzo se non si preme SX o DX
             if self._steer > 0.0:
                 self._steer = max(self._steer - self._steer_increment, 0.0)
             elif self._steer < 0.0:
                 self._steer = min(self._steer + self._steer_increment, 0.0)
 
-        self._control.steer = round(self._steer, 2)  # Arrotonda per stabilità
-
-        # Restituisce l'oggetto di controllo
+        self._control.steer = round(self._steer, 2)
         return self._control
 
