@@ -42,9 +42,9 @@ def draw_fused_detections(image, perception_data):
     min_dist = perception_data['dist']
 
     info_color = (0, 0, 255) if (ttc < config.TTC_THRESHOLD or min_dist < 3.0) else (0, 255, 0)
-    #info_text = f"MIN DIST: {min_dist:.1f}m | TTC: {ttc:.1f}s"
-    #cv2.putText(image, info_text, (10, 30),
-    #            cv2.FONT_HERSHEY_SIMPLEX, 0.6, info_color, 2)
+    info_text = f"MIN DIST: {min_dist:.1f}m | TTC: {ttc:.1f}s"
+    cv2.putText(image, info_text, (10, 30),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.6, info_color, 2)
 
 def main():
     pygame.init()
@@ -61,8 +61,8 @@ def main():
 
             print("MAIN [Initializing scenario]")
             spawner = Spawner(manager.world, manager.actor_list)
-            # ego_vehicle, target_vehicle = setup_parking_scenario(manager.world, spawner)
-            ego_vehicle = setup_parking_scenario_with_pedestrian(manager.world, spawner)
+            ego_vehicle, target_vehicle = setup_parking_scenario(manager.world, spawner)
+            #ego_vehicle = setup_parking_scenario_with_pedestrian(manager.world, spawner)
 
             print("MAIN [Initializing perception and Sensor manager]")
             perception_system = RctaPerception()
