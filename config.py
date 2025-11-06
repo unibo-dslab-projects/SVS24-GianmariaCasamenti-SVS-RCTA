@@ -21,7 +21,7 @@ MAP_NAME = 'Town05'
 EGO_VEHICLE_MODEL = 'vehicle.audi.tt'
 EGO_SPAWN_TRANSFORM = carla.Transform(
     carla.Location(x=-31.0, y=-30, z=0.5),
-    carla.Rotation(yaw=0)  #ready to reverse direction (retromarcia)
+    carla.Rotation(yaw=0)
 )
 
 #blocking vehicles
@@ -69,23 +69,20 @@ CAMERA_IMAGE_WIDTH = 416 #640
 CAMERA_IMAGE_HEIGHT = 416 #384
 
 
-REAR_CAMERA_FOV = "110"
+CAMERA_FOV = "110"
 REAR_CAMERA_TRANSFORM = carla.Transform(
     carla.Location(x=-2.0, y=0.0, z=0.9),
-    carla.Rotation(pitch=10.0,yaw =180)
+    carla.Rotation(yaw =180)
 )
 
-
-RCTA_CAMERA_FOV = "110"
-
-RCTA_LEFT_CAMERA_TRANSFORM = carla.Transform(
+LEFT_CAMERA_TRANSFORM = carla.Transform(
     carla.Location(x=-2.0, y=-0.5, z=0.9),
-    carla.Rotation(pitch=20.0,yaw =-135)
+    carla.Rotation(yaw =-135)
 )
 
-RCTA_RIGHT_CAMERA_TRANSFORM = carla.Transform(
+RIGHT_CAMERA_TRANSFORM = carla.Transform(
     carla.Location(x=-2.0, y=0.5, z=0.9),
-    carla.Rotation(pitch=20.0,yaw=135)
+    carla.Rotation(yaw=135)
 )
 
 YOLO_MODEL_PATH = 'models/yolov8n.pt'

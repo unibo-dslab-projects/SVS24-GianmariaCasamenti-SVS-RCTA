@@ -55,28 +55,21 @@ def main():
 
     try:
         with CarlaManager() as manager:
-            #load map
-            print(f"Loading map: {config.MAP_NAME}")
+            print(f"MAIN [loading: {config.MAP_NAME}]")
             manager.client.load_world(config.MAP_NAME)
             manager.world = manager.client.get_world()
             manager.world.tick()
-            print("Map loaded")
 
-            #initialize spawner
+            print("MAIN [Initializing scenario]")
             spawner = Spawner(manager.world, manager.actor_list)
-            #ego_vehicle, target_vehicle = setup_parking_scenario(manager.world, spawner)
-            #if not ego_vehicle or not target_vehicle:
-            #    print("Error, scenario creation failed")
-            #    return
-
+            # ego_vehicle, target_vehicle = setup_parking_scenario(manager.world, spawner)
             ego_vehicle = setup_parking_scenario_with_pedestrian(manager.world, spawner)
 
-            print("Initializing Perception and Sensor Manager...")
+            print("MAIN [Initializing perception and Sensor manager]")
             perception_system = RctaPerception()
             sensor_manager = SensorManager(manager.world, manager.actor_list)
 
-            #Initialize publisher MQTT decisionMaker
-            print("Initializing Decision Maker and HMI Publisher...")
+            print("MAIN [Initializing Decision Maker and HMI Publisher]")
             decision_maker = DecisionMaker()
             mqtt_publisher = MqttPublisher(
                 broker_address=config.MQTT_BROKER,
@@ -84,69 +77,58 @@ def main():
             )
             mqtt_publisher.connect()
 
-            #initialize controller
-            print("Initializing controller")
+            print("MAIN [Initializing controller]")
             controller = KeyboardController()
 
-            # Initialize perception and cameras
+            print("MAIN [Initializing cameras and callback]")
             rear_cam, left_cam, right_cam = sensor_manager.setup_rcta_cameras(ego_vehicle)
-            if not (rear_cam and left_cam and right_cam):
-                print("ERRORE: Fallimento spawn telecamere. Uscita.")
-                return
 
-            #Initialize callback
             rear_cam.listen(perception_system.rear_cam_callback)
             left_cam.listen(perception_system.left_cam_callback)
             right_cam.listen(perception_system.right_cam_callback)
-            print("Camera callback setted.")
 
-            #Initialize setting spectator's view
+            print("MAIN [Initializing spectator]")
             spectator = manager.world.get_spectator()
-            #spectator_transform = carla.Transform(
-            #    config.EGO_SPAWN_TRANSFORM.location + carla.Location(x=20, y=10, z=10.0),
-            #    carla.Rotation(pitch=-45, yaw=-150)
-            #)
-            #spectator.set_transform(spectator_transform)
 
             time.sleep(1.0)
+            running = True
 
-            while True:
+            while running:
                 manager.world.tick()
 
                 #spectator view
                 ego_transform = ego_vehicle.get_transform()
                 spectator_location = (ego_transform.location +
-                    ego_transform.get_forward_vector() * (-15)
-                    +carla.Location(z=10))
-                spectator_rotation = carla.Rotation(pitch=-45, yaw=ego_transform.rotation.yaw)
+                                      ego_transform.get_forward_vector() * (-10) +
+                                      carla.Location(z=5))
+                spectator_rotation = carla.Rotation(pitch=-30, yaw=ego_transform.rotation.yaw)
                 spectator.set_transform(carla.Transform(spectator_location, spectator_rotation))
 
-                #controller integration
+                #Gestione input
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         running = False
-                # Ottieni lo stato di *tutti* i tasti
-                keys = pygame.key.get_pressed()
 
-                # Controlla il tasto 'Q' per uscire
+                keys = pygame.key.get_pressed()
                 if keys[pygame.K_q]:
                     running = False
-                    break
-                # Invia l'array di tasti al controller
+
                 control = controller.parse_input(keys)
                 ego_vehicle.apply_control(control)
                 is_reversing = control.reverse
 
+                #Percezione
                 perception_data = perception_system.get_perception_data()
+                #Decisione
                 dangerous_objects_list = decision_maker.evaluate(
                     perception_data,
                     is_reversing
                 )
                 mqtt_publisher.publish_status(dangerous_objects_list)
 
+                #Finestre di visualizzazione
                 frames = perception_system.current_frames
                 detections = perception_system.detected_objects
-
                 if frames['rear'] is not None:
                     display_rear = frames['rear'].copy()
                     draw_detections(display_rear, detections['rear'])
@@ -170,22 +152,20 @@ def main():
                     draw_depth_info(display_right, dist_right, ttc_right, is_alert_right)
                     cv2.imshow('Right RCTA Camera (Depth)', display_right)
 
-                # Premi 'q' per chiudere le finestre OpenCV e uscire
-                #if cv2.waitKey(1) & 0xFF == ord('q'):
-                #    break
 
                 cv2.waitKey(1)
-                # Aggiorna la finestra di Pygame (necessario)
                 pygame.display.flip()
 
-    except KeyboardInterrupt:
-        print("\nScript interrotto dall'utente.")
-    except Exception as e:(
-        print(f"\nSi è verificato un errore: {e}"))
 
+    except KeyboardInterrupt:
+        print("\nMAIN [Script interrupted from keyboard]")
+    except Exception as e:
+        print(f"\nMAIN [Exception: {e}]")
     finally:
+        pygame.quit()
         cv2.destroyAllWindows()
-        print("all OpenCV windows closed")
+        print("MAIN [All windows closed]")
+
 
 if __name__ == '__main__':
     main()
