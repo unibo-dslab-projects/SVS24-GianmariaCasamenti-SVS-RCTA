@@ -1,6 +1,5 @@
 import config
 
-
 class DecisionMaker:
     """
     Analyze perception data from all 3 RGBD channel and vehicle state,

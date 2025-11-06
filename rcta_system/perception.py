@@ -33,7 +33,7 @@ class RctaCameraChannel:
         # Avvio del worker thread
         self.thread = threading.Thread(target=self._worker_loop, daemon=True)
         self.thread.start()
-        print(f"RctaPerception: Channel '{side}' started.")
+        print(f"PERCEPTION [Channel '{side}' started]")
 
     def _to_numpy_rgb(self, carla_img):
         array = np.frombuffer(carla_img.raw_data, dtype=np.uint8)
@@ -48,28 +48,24 @@ class RctaCameraChannel:
         return normalized * 1000.0
 
     def _worker_loop(self):
-        """Loop principale del thread che processa RGB+Depth."""
+        """Main loop to process RGB + Depth"""
         while self.running:
             if self.has_new_data and self.latest_rgb_img and self.latest_depth_img:
-                # 1. Prendi snapshot dei dati attuali
+                # Prendi snapshot dei dati attuali
                 rgb_carla = self.latest_rgb_img
                 depth_carla = self.latest_depth_img
                 self.has_new_data = False  # Reset flag
-
-                # 2. Conversione dati
+                # Conversione dati
                 rgb_np = self._to_numpy_rgb(rgb_carla)
                 depth_meters = self._to_depth_meters(depth_carla)
                 timestamp = depth_carla.timestamp
-
-                # 3. YOLO Detection (Sincronizzata con Lock per sicurezza GPU)
+                #YOLO Detection (Sincronizzata con Lock per sicurezza GPU)
                 with self.detector_lock:
                     detections = self.detector.detect(rgb_np)
-
-                # 4. Fusione RGB-Depth e calcolo TTC settore
+                #Fusione RGB-Depth e calcolo TTC settore
                 fused_objects, min_dist = self._fuse_results(detections, depth_meters)
                 sector_ttc = self._calculate_sector_ttc(min_dist, timestamp)
-
-                # 5. Aggiorna dati pronti per il main
+                #Aggiorna dati pronti per il main
                 self.display_frame = rgb_np.copy()
                 self.perception_data = {
                     'dist': min_dist,
@@ -81,8 +77,8 @@ class RctaCameraChannel:
 
     def _fuse_results(self, detections, depth_map):
         """
-        Per ogni detection, trova la distanza media nella depth map corrispondente.
-        Restituisce oggetti arricchiti e la distanza minima globale della scena.
+        For each detection, find the average distance in the corresponding depth map.
+        Returns enriched objects and the global minimum distance of the scene.
         """
         h, w = depth_map.shape
         min_scene_dist = float('inf')
@@ -102,9 +98,7 @@ class RctaCameraChannel:
                 if roi.size > 0:
                     obj_dist = np.percentile(roi, 10)
 
-            # Arricchisci la detection con la distanza
             det['dist'] = obj_dist
-            # TTC per singolo oggetto richiederebbe tracking, per ora usiamo placeholder
             det['ttc_obj'] = 0.0
 
             fused.append(det)
@@ -127,7 +121,6 @@ class RctaCameraChannel:
         self.prev_time = current_time
         return ttc
 
-    # --- Callbacks ---
     def rgb_callback(self, img):
         self.latest_rgb_img = img
         # Consideriamo i dati pronti solo se abbiamo anche una depth recente
@@ -138,14 +131,11 @@ class RctaCameraChannel:
 
 
 class RctaPerception:
-    """
-    Manager che inizializza i 3 canali indipendenti.
-    """
+    """Manager of a single independent channel"""
 
     def __init__(self):
         self.detector = ObjectDetector()
         self.lock = threading.Lock()  # Lock per condividere l'unica istanza YOLO
-
         self.channels = {
             'rear': RctaCameraChannel('rear', self.detector, self.lock),
             'left': RctaCameraChannel('left', self.detector, self.lock),
@@ -153,20 +143,26 @@ class RctaPerception:
         }
 
     # Wrapper callbacks
-    def rear_rgb_callback(self, i): self.channels['rear'].rgb_callback(i)
+    def rear_rgb_callback(self, i):
+        self.channels['rear'].rgb_callback(i)
 
-    def rear_depth_callback(self, i): self.channels['rear'].depth_callback(i)
+    def rear_depth_callback(self, i):
+        self.channels['rear'].depth_callback(i)
 
-    def left_rgb_callback(self, i): self.channels['left'].rgb_callback(i)
+    def left_rgb_callback(self, i):
+        self.channels['left'].rgb_callback(i)
 
-    def left_depth_callback(self, i): self.channels['left'].depth_callback(i)
+    def left_depth_callback(self, i):
+        self.channels['left'].depth_callback(i)
 
-    def right_rgb_callback(self, i): self.channels['right'].rgb_callback(i)
+    def right_rgb_callback(self, i):
+        self.channels['right'].rgb_callback(i)
 
-    def right_depth_callback(self, i): self.channels['right'].depth_callback(i)
+    def right_depth_callback(self, i):
+        self.channels['right'].depth_callback(i)
 
     def get_all_perception_data(self):
-        """Raccoglie i dati correnti da tutti i canali in un unico dizionario."""
+        """Join all data in a single dictionary"""
         return {
             side: channel.perception_data
             for side, channel in self.channels.items()

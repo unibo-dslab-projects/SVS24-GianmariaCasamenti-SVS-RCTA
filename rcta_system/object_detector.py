@@ -2,8 +2,6 @@ import numpy as np
 import config
 from ultralytics import YOLO
 
-
-
 class ObjectDetector:
     """
     Wrapper for the model YOLOv8
