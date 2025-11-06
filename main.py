@@ -141,7 +141,7 @@ def main():
                         # Disegna i box YOLO
                         draw_detections(display_img, detections[side])
                         # Mostra la finestra
-                        cv2.imshow(f"{side.upper()} RGB + YOLO", display_img)
+                        cv2.imshow(f"{side.upper()} camera", display_img)
 
 
                 cv2.waitKey(1)
