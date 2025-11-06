@@ -69,23 +69,28 @@ def main():
             perception_system = RctaPerception()
             sensor_manager = SensorManager(manager.world, manager.actor_list)
 
-            print("MAIN [Initializing Decision Maker and HMI Publisher]")
-            decision_maker = DecisionMaker()
-            mqtt_publisher = MqttPublisher(
-                broker_address=config.MQTT_BROKER,
-                port=config.MQTT_PORT
-            )
-            mqtt_publisher.connect()
+            #print("MAIN [Initializing Decision Maker and HMI Publisher]")
+            #decision_maker = DecisionMaker()
+            #mqtt_publisher = MqttPublisher(
+            #    broker_address=config.MQTT_BROKER,
+            #    port=config.MQTT_PORT
+            #)
+            #mqtt_publisher.connect()
 
             print("MAIN [Initializing controller]")
             controller = KeyboardController()
 
             print("MAIN [Initializing cameras and callback]")
-            rear_cam, left_cam, right_cam = sensor_manager.setup_rcta_cameras(ego_vehicle)
+            (rear_rgb, rear_depth,
+             left_rgb, left_depth,
+             right_rgb, right_depth) = sensor_manager.setup_rcta_cameras(ego_vehicle)
 
-            rear_cam.listen(perception_system.rear_cam_callback)
-            left_cam.listen(perception_system.left_cam_callback)
-            right_cam.listen(perception_system.right_cam_callback)
+            rear_rgb.listen(perception_system.rear_rgb_callback)
+            left_rgb.listen(perception_system.left_rgb_callback)
+            right_rgb.listen(perception_system.right_rgb_callback)
+            rear_depth.listen(perception_system.rear_depth_callback)
+            left_depth.listen(perception_system.left_depth_callback)
+            right_depth.listen(perception_system.right_depth_callback)
 
             print("MAIN [Initializing spectator]")
             spectator = manager.world.get_spectator()
@@ -118,39 +123,25 @@ def main():
                 is_reversing = control.reverse
 
                 #Percezione
-                perception_data = perception_system.get_perception_data()
+                #perception_data = perception_system.get_perception_data()
                 #Decisione
-                dangerous_objects_list = decision_maker.evaluate(
-                    perception_data,
-                    is_reversing
-                )
-                mqtt_publisher.publish_status(dangerous_objects_list)
+                #dangerous_objects_list = decision_maker.evaluate(
+                #    perception_data,
+                #    is_reversing
+                #)
+               #mqtt_publisher.publish_status(dangerous_objects_list)
 
                 #Finestre di visualizzazione
-                frames = perception_system.current_frames
+                rgb_frames = perception_system.current_rgb_frames
                 detections = perception_system.detected_objects
-                if frames['rear'] is not None:
-                    display_rear = frames['rear'].copy()
-                    draw_detections(display_rear, detections['rear'])
-                    cv2.imshow('Rear Camera', display_rear)
 
-                if frames['left'] is not None:
-                    display_left = frames['left'].copy()
-                    dist_left = perception_data['left']['dist']
-                    ttc_left = perception_data['left']['ttc']
-                    is_alert_left = "depth_left" in dangerous_objects_list
-
-                    draw_depth_info(display_left, dist_left, ttc_left, is_alert_left)
-                    cv2.imshow('Left RCTA Camera (Depth)', display_left)
-
-                if frames['right'] is not None:
-                    display_right = frames['right'].copy()
-                    dist_right = perception_data['right']['dist']
-                    ttc_right = perception_data['right']['ttc']
-                    is_alert_right = "depth_right" in dangerous_objects_list
-
-                    draw_depth_info(display_right, dist_right, ttc_right, is_alert_right)
-                    cv2.imshow('Right RCTA Camera (Depth)', display_right)
+                for side in ['left', 'rear', 'right']:
+                    if rgb_frames[side] is not None:
+                        display_img = rgb_frames[side].copy()
+                        # Disegna i box YOLO
+                        draw_detections(display_img, detections[side])
+                        # Mostra la finestra
+                        cv2.imshow(f"{side.upper()} RGB + YOLO", display_img)
 
 
                 cv2.waitKey(1)

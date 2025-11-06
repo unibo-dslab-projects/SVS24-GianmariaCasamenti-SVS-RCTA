@@ -1,20 +1,16 @@
-"""Spawner handles the generation of actors """
-
 import carla
 import random
 import config
 
 class Spawner:
-    "handles the generation of actors"
+    """Handles the generation of actors"""
     def __init__(self, world, actor_list):
         self.world = world
         self.actor_list = actor_list
         self.blueprint_library = self.world.get_blueprint_library()
 
-
     def spawn_vehicle(self, model, spawn_point=None, autopilot=False):
         """Spawn veichles according to the model at a specific random point
-
         Returns:
             Carla.Actor: spawned veichles actor, or None on failure.
         """
@@ -23,18 +19,18 @@ class Spawner:
         if spawn_point is None:
             spawn_points = self.world.get_map().get_spawn_points()
             if not spawn_points:
-                print("No spawn points, error")
+                print("SPAWNER [Error: no spawn points]")
                 return None
             spawn_point = random.choice(spawn_points)
 
         vehicle = self.world.try_spawn_actor(vehicle_bp, spawn_point)
 
         if vehicle:
-            print(f"Spawn succeeded, model: {model}")
+            print(f"SPAWNER [Spawn succeeded, model: {model}]")
             vehicle.set_autopilot(autopilot)
             self.actor_list.append(vehicle)
         else:
-            print(f"ERROR: Spawn failed, model: {model}")
+            print(f"SPAWNER [ERROR: Spawn failed, model: {model}]")
         return vehicle
 
     def spawn_pedestrian(self, model, spawn_point, destination, speed):
@@ -48,10 +44,10 @@ class Spawner:
         pedestrian = self.world.try_spawn_actor(walker_bp, spawn_point)
 
         if not pedestrian:
-            print(f"ERROR: spawned failed: {model}")
+            print(f"SPAWNER [ERROR: spawned failed: {model}]")
             return None, None
 
-        print(f"spawned with successfully: {model}")
+        print(f"SPAWNER [Spawned with successfully: {model}]")
         self.actor_list.append(pedestrian)
 
         walker_controller_bp = self.blueprint_library.find('controller.ai.walker')
@@ -61,7 +57,7 @@ class Spawner:
             attach_to=pedestrian
         )
         if not controller:
-            print(f"ERROR: controller spawn AI failed")
+            print(f"SPAWNER [ERROR: controller spawn AI failed]")
             pedestrian.destroy()
             self.actor_list.remove(pedestrian)
             return None, None
@@ -71,9 +67,6 @@ class Spawner:
         controller.start()
         controller.go_to_location(destination)
         controller.set_max_speed(speed)
-        print(f"AI pedestrian walks to {destination} with {speed} m/s")
+        print(f"SPAWNER [AI pedestrian walks to {destination} with {speed} m/s]")
 
         return pedestrian, controller
-
-
-
