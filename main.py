@@ -20,37 +20,32 @@ from controller.keyboard_controller import KeyboardController
 
 def draw_fused_detections(image, perception_data):
     """
-    Disegna bbox, classe, distanza e info generali sul frame.
+    Draw bbox, class, distance and info.
     """
-    # 1. Disegna oggetti rilevati
+    RED = (0, 0, 255)
+    GREEN = (0, 255, 0)
     for det in perception_data['objects']:
         bbox = [int(c) for c in det['bbox']]
         dist = det.get('dist', float('inf'))
+        color = RED if dist < config.DIST_THRESHOLD else GREEN
 
-        # Colore box: rosso se vicino (<5m), verde altrimenti
-        color = (0, 0, 255) if dist < 5.0 else (0, 255, 0)
-
-        # Testo box: Classe + Distanza
         label = f"{det['class']} {dist:.1f}m"
-
         cv2.rectangle(image, (bbox[0], bbox[1]), (bbox[2], bbox[3]), color, 2)
         cv2.putText(image, label, (bbox[0], bbox[1] - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
-    # 2. Disegna info generali del settore in alto a sinistra
     ttc = perception_data['ttc']
     min_dist = perception_data['dist']
 
-    info_color = (0, 0, 255) if (ttc < config.TTC_THRESHOLD or min_dist < 3.0) else (0, 255, 0)
+    info_color = RED if (ttc < config.TTC_THRESHOLD or min_dist < 3.0) else GREEN
     info_text = f"MIN DIST: {min_dist:.1f}m | TTC: {ttc:.1f}s"
     cv2.putText(image, info_text, (10, 30),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.6, info_color, 2)
 
 def main():
     pygame.init()
-    # Crea una piccola finestra solo per catturare l'input
     pygame.display.set_mode((200, 100))
-    pygame.display.set_caption('Controller Input')
+    pygame.display.set_caption('Input')
 
     try:
         with CarlaManager() as manager:
@@ -132,7 +127,7 @@ def main():
                     if frame is not None:
                         # Disegna le info sul frame (in-place)
                         draw_fused_detections(frame, data)
-                        cv2.imshow(f"{side.upper()} Fused RGBD", frame)
+                        cv2.imshow(f"{side.upper()} RGBD camera", frame)
 
 
                 cv2.waitKey(1)

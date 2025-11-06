@@ -7,8 +7,8 @@ from rcta_system.object_detector import ObjectDetector
 
 class RctaCameraChannel:
     """
-    Gestisce una singola coppia di camere (RGB + Depth) in un thread dedicato.
-    Effettua la fusione dei dati e produce frame pronti per la visualizzazione.
+    Manage a single pair of cameras (RGB + depth) in a dedicated thread,
+    Do data fusion and produce a frame.
     """
 
     def __init__(self, side, detector, detector_lock):
@@ -132,7 +132,6 @@ class RctaCameraChannel:
 
 class RctaPerception:
     """Manager of a single independent channel"""
-
     def __init__(self):
         self.detector = ObjectDetector()
         self.lock = threading.Lock()  # Lock per condividere l'unica istanza YOLO
