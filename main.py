@@ -56,8 +56,8 @@ def main():
 
             print("MAIN [Initializing scenario]")
             spawner = Spawner(manager.world, manager.actor_list)
-            ego_vehicle, target_vehicle = setup_parking_scenario(manager.world, spawner)
-            #ego_vehicle = setup_parking_scenario_with_pedestrian(manager.world, spawner)
+            #ego_vehicle, target_vehicle = setup_parking_scenario(manager.world, spawner)
+            ego_vehicle = setup_parking_scenario_with_pedestrian(manager.world, spawner)
 
             print("MAIN [Initializing perception and Sensor manager]")
             perception_system = RctaPerception()

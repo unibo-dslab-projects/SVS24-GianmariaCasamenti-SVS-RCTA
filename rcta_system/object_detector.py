@@ -40,17 +40,27 @@ class ObjectDetector:
 
         # Esegui l'inferenza
         # Filtriamo già qui per classi e confidenza per essere più veloci
-        results = self.model.predict(
+        results = self.model.track(
             rgb_image,
             verbose=False,
             classes=self.target_class_indices,
-            conf=0.5
+            conf=0.5,
+            persist = True
         )
 
         detections = []
-        # Estrai i risultati
-        # results[0] contiene i rilevamenti per la prima (e unica) immagine
+
+        # Controlla se ci sono ID di tracciamento
+        # Se non ci sono oggetti, results[0].boxes.id potrebbe essere None
+        if results[0].boxes.id is None:
+            return []  # Nessun oggetto tracciato in questo frame
+
         for box in results[0].boxes.cpu().numpy():
+            if box.id is None:
+                continue
+
+            #estrai ID tracker
+            track_id = int(box.id[0])
             # Estrai le coordinate del Bounding Box
             bbox = [int(coord) for coord in box.xyxy[0]]
             # Estrai la confidenza
@@ -59,6 +69,7 @@ class ObjectDetector:
             class_id = int(box.cls[0])
             class_name = self.class_names[class_id]
             detections.append({
+                'id': track_id,
                 'class': class_name,
                 'confidence': conf,
                 'bbox': bbox
