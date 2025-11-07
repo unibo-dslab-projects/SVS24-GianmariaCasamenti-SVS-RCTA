@@ -19,9 +19,10 @@ except ImportError as e:
 
 def main():
     """
-    Script di test per simulare scenari RCTA e verificare la risposta dell'HMI grafica.
+    Script di test per simulare scenari RCTA inviando
+    il NUOVO formato JSON strutturato.
     """
-    print("--- Starting MQTT HMI Test ---")
+    print("--- Starting MQTT HMI Test (Formato JSON v2) ---")
     publisher = None
     try:
         publisher = MqttPublisher(
@@ -47,44 +48,47 @@ def main():
 
         while True:
             # SCENARIO 1: Tutto tranquillo (SAFE)
-            # L'HMI dovrebbe mostrare settori grigi/verdi trasparenti
             print("Scenario [SAFE]: Nessun rilevamento")
-            publisher.publish_status([])
+            publisher.publish_status([]) # Invia una lista vuota
             time.sleep(3)
 
             # SCENARIO 2: Avvicinamento statico da dietro (WARNING)
-            # L'HMI dovrebbe mostrare il settore posteriore in GIALLO fisso
-            alert_rear_static = ["rear:person_near"]
-            print(f"Scenario [WARNING]: {alert_rear_static}")
+            alert_rear_static = [
+                {"zone": "rear", "alert_level": "warning", "class": "person", "distance": 2.8, "ttc": float('inf')}
+            ]
+            print(f"Scenario [WARNING]: Oggetto 'person' a 2.8m (rear)")
             publisher.publish_status(alert_rear_static)
             time.sleep(4)
 
-            # SCENARIO 3: Pericolo imminente da sinistra (DANGER)
-            # L'HMI dovrebbe mostrare il settore sinistro LAMPEGGIANTE ROSSO
-            # Il settore posteriore potrebbe rimanere giallo se l'oggetto è ancora lì
-            alert_left_fast = ["rear:person_near", "left:approaching_fast"]
-            print(f"Scenario [DANGER+WARNING]: {alert_left_fast}")
+            # SCENARIO 3: Pericolo imminente da sinistra + Warning posteriore (DANGER+WARNING)
+            alert_left_fast = [
+                {"zone": "rear", "alert_level": "warning", "class": "person", "distance": 2.5, "ttc": float('inf')},
+                {"zone": "left", "alert_level": "danger", "class": "car", "distance": 8.0, "ttc": 1.5}
+            ]
+            print(f"Scenario [DANGER+WARNING]: 'car' (left, 1.5s TTC) + 'person' (rear, 2.5m)")
             publisher.publish_status(alert_left_fast)
             time.sleep(5)
 
-            # SCENARIO 4: Pericolo passato, rimane solo un'auto parcheggiata a destra (WARNING)
-            # Settore destro GIALLO, gli altri SAFE
-            alert_right_static = ["right:car_near"]
-            print(f"Scenario [WARNING]: {alert_right_static}")
+            # SCENARIO 4: Oggetto statico a destra (WARNING)
+            alert_right_static = [
+                {"zone": "right", "alert_level": "warning", "class": "truck", "distance": 3.1, "ttc": float('inf')}
+            ]
+            print(f"Scenario [WARNING]: Oggetto 'truck' a 3.1m (right)")
             publisher.publish_status(alert_right_static)
             time.sleep(4)
 
             # SCENARIO 5: Multi-direzione danger (DANGER)
-            # Sinistra e Destra lampeggiano ROSSO
-            alert_multi = ["left:approaching_fast", "right:approaching_fast"]
-            print(f"Scenario [MULTI-DANGER]: {alert_multi}")
+            alert_multi = [
+                {"zone": "left", "alert_level": "danger", "class": "FAST", "distance": 10.0, "ttc": 1.1},
+                {"zone": "right", "alert_level": "danger", "class": "car", "distance": 9.0, "ttc": 1.4}
+            ]
+            print(f"Scenario [MULTI-DANGER]: Due oggetti in avvicinamento rapido")
             publisher.publish_status(alert_multi)
             time.sleep(4)
 
     except KeyboardInterrupt:
         print("\n\n--- Test interrotto dall'utente ---")
     except Exception as e:
-        # Stampa l'intero stack trace per debug migliore
         import traceback
         traceback.print_exc()
         print(f"\nSi è verificato un errore inatteso: {e}")
@@ -92,7 +96,6 @@ def main():
         if publisher:
             if publisher.is_connected:
                 publisher.disconnect()
-            # Attendiamo un attimo che il thread di loop si chiuda
             time.sleep(0.5)
             print("Publisher disconnesso correttamente.")
 
