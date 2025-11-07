@@ -111,11 +111,11 @@ def main():
 
                 control = controller.parse_input(keys)
                 ego_vehicle.apply_control(control)
-                is_reversing = control.reverse
 
                 #Percezione
                 all_perception_data = perception_system.get_all_perception_data()
                 is_reversing = control.reverse
+                #is_reversing = True
                 dangerous_objects = decision_maker.evaluate(all_perception_data, is_reversing)
                 mqtt_publisher.publish_status(dangerous_objects)
 
