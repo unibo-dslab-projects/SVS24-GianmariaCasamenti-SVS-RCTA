@@ -1,6 +1,7 @@
 import config
 import time
 
+
 class DecisionMaker:
     """
     Analyze perception data from all 3 RGBD channel and vehicle state,
@@ -29,31 +30,46 @@ class DecisionMaker:
             has_danger_alert_for_side = False
 
             # 1. Controllo DANGER (TTC basso)
+            # data['ttc'] ora è il min_ttc_obj di quel settore
             if data['ttc'] < self.ttc_threshold:
-                min_dist_in_sector = data.get('dist', float('inf'))
 
-                # --- FIX: INIZIALIZZARE LA VARIABILE QUI ---
-                closest_obj_class = "unknown"
-                # -------------------------------------------
-
-                # Questo loop cerca di trovare il nome dell'oggetto più vicino
+                # --- MODIFICA: Trova l'oggetto che ha causato il DANGER ---
+                dangerous_obj = None
                 for obj in data['objects']:
-                    # Usiamo <= per assicurarci che venga assegnato se le distanze sono uguali
-                    if obj.get('dist', float('inf')) <= min_dist_in_sector:
-                        min_dist_in_sector = obj['dist']
-                        closest_obj_class = obj['class']
+                    # Cerca l'oggetto il cui TTC ha triggerato l'allarme
+                    # Usiamo una piccola tolleranza per i float
+                    if abs(obj.get('ttc_obj', float('inf')) - data['ttc']) < 0.01:
+                        dangerous_obj = obj
+                        break
+
+                # Fallback: se non lo troviamo, prendi il primo oggetto sotto soglia
+                if dangerous_obj is None:
+                    for obj in data['objects']:
+                        if obj.get('ttc_obj', float('inf')) < self.ttc_threshold:
+                            dangerous_obj = obj
+                            break
+
+                # Ora abbiamo l'oggetto specifico che causa il pericolo
+                if dangerous_obj:
+                    obj_class = dangerous_obj['class']
+                    obj_dist = dangerous_obj['dist']
+                else:
+                    # Fallback estremo (dovuto a discrepanze di float)
+                    obj_class = "FAST"  # Classe generica per oggetto veloce
+                    obj_dist = data.get('dist', float('inf'))
+                # ----------------------------------------------------
 
                 dangerous_objects_list.append({
                     "zone": side,
                     "alert_level": "danger",
-                    # Ora 'closest_obj_class' esisterà sempre
-                    "class": closest_obj_class if closest_obj_class != "unknown" else "FAST",
-                    "distance": min_dist_in_sector,
+                    "class": obj_class,  # Ora è la classe dell'oggetto pericoloso
+                    "distance": obj_dist,  # La sua distanza
                     "ttc": data['ttc']
                 })
                 has_danger_alert_for_side = True
 
             # 2. Controllo WARNING (Distanza bassa)
+            # Questa logica era già corretta e non ha bisogno di modifiche
             if not has_danger_alert_for_side:
                 closest_obj_in_zone = None
                 min_dist_for_warning = self.dist_threshold
@@ -74,4 +90,3 @@ class DecisionMaker:
                     })
 
         return dangerous_objects_list
-

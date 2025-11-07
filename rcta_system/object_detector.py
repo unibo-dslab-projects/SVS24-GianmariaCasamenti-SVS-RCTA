@@ -74,4 +74,5 @@ class ObjectDetector:
                 'confidence': conf,
                 'bbox': bbox
             })
+            print(detections)
         return detections

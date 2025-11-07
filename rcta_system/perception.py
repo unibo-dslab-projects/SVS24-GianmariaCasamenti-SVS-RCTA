@@ -26,9 +26,13 @@ class RctaCameraChannel:
         self.display_frame = None
         self.perception_data = {'dist': float('inf'), 'ttc': float('inf'), 'objects': []}
 
-        # Variabili per calcolo TTC di settore
-        self.prev_min_dist = float('inf')
-        self.prev_time = 0.0
+        #dizionario tracker
+        # Formato: { track_id: {'dist': float, 'time': float, 'class': str} }
+        self.tracked_objects = {}
+        self.last_cleanup_time = 0.0
+
+        self.STALE_TRACK_THRESHOLD_SEC = 1.0  # Tempo per cui tenere un track se scompare
+        self.MIN_VELOCITY_FOR_TTC_MPS = 0.5  # Velocità minima (m/s) per calcolare il TTC
 
         # Avvio del worker thread
         self.thread = threading.Thread(target=self._worker_loop, daemon=True)
@@ -59,18 +63,31 @@ class RctaCameraChannel:
                 rgb_np = self._to_numpy_rgb(rgb_carla)
                 depth_meters = self._to_depth_meters(depth_carla)
                 timestamp = depth_carla.timestamp
+
                 #YOLO Detection (Sincronizzata con Lock per sicurezza GPU)
                 with self.detector_lock:
                     detections = self.detector.detect(rgb_np)
+
                 #Fusione RGB-Depth e calcolo TTC settore
                 fused_objects, min_dist = self._fuse_results(detections, depth_meters)
-                sector_ttc = self._calculate_sector_ttc(min_dist, timestamp)
+
+                #calcola ttc per ogni oggetto e aggiorna lo stato
+                self._update_tracks_and_calc_ttc(fused_objects, timestamp)
+                #pulisce i vecchi track
+                self._cleanup_stale_tracks(timestamp)
+
+                # Trova il TTC minimo tra tutti gli oggetti del settore
+                min_sector_ttc = float('inf')
+                for obj in fused_objects:
+                    if obj.get('ttc_obj', float('inf')) < min_sector_ttc:
+                        min_sector_ttc = obj['ttc_obj']
+
                 #Aggiorna dati pronti per il main
                 self.display_frame = rgb_np.copy()
                 self.perception_data = {
                     'dist': min_dist,
-                    'ttc': sector_ttc,
-                    'objects': fused_objects
+                    'ttc': min_sector_ttc, # Ora è il min TTC *degli oggetti*
+                    'objects': fused_objects # Lista di oggetti con 'ttc_obj' individuale
                 }
             else:
                 time.sleep(0.005)  # Evita busy-waiting eccessivo
@@ -107,19 +124,54 @@ class RctaCameraChannel:
 
         return fused, min_scene_dist
 
-    def _calculate_sector_ttc(self, current_dist, current_time):
-        ttc = float('inf')
-        if self.prev_time > 0.0 and current_dist < 100.0:  # Calcola solo se distanza ragionevole
-            delta_t = current_time - self.prev_time
-            delta_d = self.prev_min_dist - current_dist
-            # Se l'oggetto si avvicina velocemente (> 0.5 m/s)
-            if delta_t > 0.0 and delta_d / delta_t > 0.5:
-                v_rel = delta_d / delta_t
-                ttc = current_dist / v_rel
+    def _update_tracks_and_calc_ttc(self, current_objects, current_time):
+        """
+        Aggiorna lo stato degli oggetti tracciati e calcola il TTC per ognuno.
+        Modifica 'current_objects' in-place aggiungendo 'ttc_obj'.
+        """
+        for obj in current_objects:
+            track_id = obj['id']
 
-        self.prev_min_dist = current_dist
-        self.prev_time = current_time
-        return ttc
+            if track_id in self.tracked_objects:
+                # Oggetto già tracciato
+                prev_state = self.tracked_objects[track_id]
+
+                delta_t = current_time - prev_state['time']
+                delta_d = prev_state['dist'] - obj['dist']  # Positivo se si avvicina
+
+                # Calcola TTC solo se abbiamo uno storico e si sta avvicinando
+                if delta_t > 0.0:
+                    rel_velocity = delta_d / delta_t  # m/s
+
+                    if rel_velocity > self.MIN_VELOCITY_FOR_TTC_MPS:
+                        # Calcola il TTC solo se la velocità è significativa
+                        ttc = obj['dist'] / rel_velocity
+                        obj['ttc_obj'] = ttc  # Assegna il TTC all'oggetto specifico
+
+            # Aggiorna (o aggiungi) lo stato dell'oggetto
+            self.tracked_objects[track_id] = {
+                'dist': obj['dist'],
+                'time': current_time,
+                'class': obj['class']
+            }
+
+    def _cleanup_stale_tracks(self, current_time):
+        """
+        Rimuove gli oggetti da self.tracked_objects se non visti per un po'.
+        """
+        # Esegui la pulizia solo ogni tanto per efficienza
+        if current_time - self.last_cleanup_time < self.STALE_TRACK_THRESHOLD_SEC:
+            return
+
+        self.last_cleanup_time = current_time
+
+        stale_ids = [
+            track_id for track_id, state in self.tracked_objects.items()
+            if current_time - state['time'] > self.STALE_TRACK_THRESHOLD_SEC
+        ]
+
+        for track_id in stale_ids:
+            del self.tracked_objects[track_id]
 
     def rgb_callback(self, img):
         self.latest_rgb_img = img
@@ -128,6 +180,18 @@ class RctaCameraChannel:
 
     def depth_callback(self, img):
         self.latest_depth_img = img
+
+    def clear_data(self):
+        """Resets all internal data of the channel."""
+        self.latest_rgb_img = None
+        self.latest_depth_img = None
+        self.has_new_data = False
+        self.display_frame = None
+        self.perception_data = {'dist': float('inf'), 'ttc': float('inf'), 'objects': []}
+        # Pulisce anche lo storico del tracking e i timer
+        self.tracked_objects = {}
+        self.last_cleanup_time = 0.0
+        print(f"PERCEPTION [Channel '{self.side}' data cleared]")
 
 
 class RctaPerception:
@@ -159,6 +223,11 @@ class RctaPerception:
 
     def right_depth_callback(self, i):
         self.channels['right'].depth_callback(i)
+
+    def clear_data(self):
+        """Clears data for all managed channels."""
+        for channel in self.channels.values():
+            channel.clear_data()
 
     def get_all_perception_data(self):
         """Join all data in a single dictionary"""

@@ -27,20 +27,15 @@ def draw_fused_detections(image, perception_data):
     for det in perception_data['objects']:
         bbox = [int(c) for c in det['bbox']]
         dist = det.get('dist', float('inf'))
+        ttc = perception_data['ttc']
+
         color = RED if dist < config.DIST_THRESHOLD else GREEN
 
-        label = f"{det['class']} {dist:.1f}m"
+        label = f"{det['class']} {dist:.1f}m {ttc:.1f}s "
         cv2.rectangle(image, (bbox[0], bbox[1]), (bbox[2], bbox[3]), color, 2)
         cv2.putText(image, label, (bbox[0], bbox[1] - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
-    ttc = perception_data['ttc']
-    min_dist = perception_data['dist']
-
-    info_color = RED if (ttc < config.TTC_THRESHOLD or min_dist < 3.0) else GREEN
-    info_text = f"MIN DIST: {min_dist:.1f}m | TTC: {ttc:.1f}s"
-    cv2.putText(image, info_text, (10, 30),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.6, info_color, 2)
 
 def main():
     pygame.init()
@@ -90,7 +85,7 @@ def main():
             running = True
 
             while running:
-                manager.world.tick()
+                #manager.world.tick()
 
                 #spectator view
                 ego_transform = ego_vehicle.get_transform()

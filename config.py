@@ -76,12 +76,13 @@ YOLO_MODEL_PATH = 'models/yolov8n.pt'
 
 
 #_____________________________________CONTROLLER SETTING________________________
-THROTTLE = 0.4
+THROTTLE = 0.6
 STEER_INCREMENT = 0.05
 
 #_____________________________________RCTA SETTING________________________
 TTC_THRESHOLD = 2.5 #secondi
 DIST_THRESHOLD = 4.0 #metri
+DEBUG = False
 
 
 
