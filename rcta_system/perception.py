@@ -116,7 +116,7 @@ class RctaCameraChannel:
                     obj_dist = np.percentile(roi, 10)
 
             det['dist'] = obj_dist
-            det['ttc_obj'] = 0.0
+            det['ttc_obj'] = float('inf')
 
             fused.append(det)
             if obj_dist < min_scene_dist:
@@ -181,18 +181,6 @@ class RctaCameraChannel:
     def depth_callback(self, img):
         self.latest_depth_img = img
 
-    def clear_data(self):
-        """Resets all internal data of the channel."""
-        self.latest_rgb_img = None
-        self.latest_depth_img = None
-        self.has_new_data = False
-        self.display_frame = None
-        self.perception_data = {'dist': float('inf'), 'ttc': float('inf'), 'objects': []}
-        # Pulisce anche lo storico del tracking e i timer
-        self.tracked_objects = {}
-        self.last_cleanup_time = 0.0
-        print(f"PERCEPTION [Channel '{self.side}' data cleared]")
-
 
 class RctaPerception:
     """Manager of a single independent channel"""
@@ -223,11 +211,6 @@ class RctaPerception:
 
     def right_depth_callback(self, i):
         self.channels['right'].depth_callback(i)
-
-    def clear_data(self):
-        """Clears data for all managed channels."""
-        for channel in self.channels.values():
-            channel.clear_data()
 
     def get_all_perception_data(self):
         """Join all data in a single dictionary"""

@@ -24,18 +24,46 @@ def draw_fused_detections(image, perception_data):
     """
     RED = (0, 0, 255)
     GREEN = (0, 255, 0)
+
+    # --- MODIFICA ---
+    # Prendiamo il TTC minimo del settore una sola volta
+    sector_ttc = perception_data['ttc']
+    sector_dist = perception_data['dist']
+    # -------------
+
     for det in perception_data['objects']:
         bbox = [int(c) for c in det['bbox']]
         dist = det.get('dist', float('inf'))
-        ttc = perception_data['ttc']
 
-        color = RED if dist < config.DIST_THRESHOLD else GREEN
+        # --- MODIFICA ---
+        # Prendi il TTC di QUESTO oggetto
+        obj_ttc = det.get('ttc_obj', float('inf'))
+        # ----------------
 
-        label = f"{det['class']} {dist:.1f}m {ttc:.1f}s "
+        # Colora in base al pericolo REALE di questo oggetto
+        color = GREEN
+        if obj_ttc < config.TTC_THRESHOLD:
+            color = RED
+        elif dist < config.DIST_THRESHOLD:
+            color = RED  # O un altro colore, es. GIALLO
+
+        # Prepara le stringhe per l'etichetta
+        dist_str = f"{dist:.1f}m"
+        ttc_str = f"{obj_ttc:.1f}s" if obj_ttc != float('inf') else "---"
+
+        label = f"{det['class']} {dist_str} {ttc_str}"
         cv2.rectangle(image, (bbox[0], bbox[1]), (bbox[2], bbox[3]), color, 2)
         cv2.putText(image, label, (bbox[0], bbox[1] - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
+    # --- MODIFICA ---
+    # Disegna le info generali del SETTORE (il pericolo maggiore)
+    # (Questa parte era assente ma c'era in una versione precedente,
+    # la rimetto perché è utile)
+    info_color = RED if (sector_ttc < config.TTC_THRESHOLD or sector_dist < 3.0) else GREEN
+    info_text = f"MIN DIST: {sector_dist:.1f}m | MIN TTC: {sector_ttc:.1f}s"
+    cv2.putText(image, info_text, (10, 30),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.6, info_color, 2)
 
 def main():
     pygame.init()
@@ -85,7 +113,7 @@ def main():
             running = True
 
             while running:
-                #manager.world.tick()
+                manager.world.tick()
 
                 #spectator view
                 ego_transform = ego_vehicle.get_transform()
