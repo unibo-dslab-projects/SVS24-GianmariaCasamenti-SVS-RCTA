@@ -81,7 +81,7 @@ STEER_INCREMENT = 0.05
 
 #_____________________________________RCTA SETTING________________________
 TTC_THRESHOLD = 2.5 #secondi
-DIST_THRESHOLD = 4.0 #metri
+DIST_THRESHOLD = 3.0 #metri
 DEBUG = False
 
 

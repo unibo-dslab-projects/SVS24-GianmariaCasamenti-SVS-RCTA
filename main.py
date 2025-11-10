@@ -72,10 +72,10 @@ def main():
 
     try:
         with CarlaManager() as manager:
-            print(f"MAIN [loading: {config.MAP_NAME}]")
-            manager.client.load_world(config.MAP_NAME)
-            manager.world = manager.client.get_world()
-            manager.world.tick()
+            #print(f"MAIN [loading: {config.MAP_NAME}]")
+            #manager.client.load_world(config.MAP_NAME)
+            #manager.world = manager.client.get_world()
+            #manager.world.tick()
 
             print("MAIN [Initializing scenario]")
             spawner = Spawner(manager.world, manager.actor_list)
