@@ -8,7 +8,9 @@ from carla_bridge.carla_manager import CarlaManager
 from carla_bridge.spawner import Spawner
 from carla_bridge.sensor_manager import SensorManager
 
-from scenarios.parking_lot_scenario import setup_parking_scenario, setup_parking_scenario_with_pedestrian
+from scenarios.parking_lot_scenario import (setup_parking_scenario,
+                                            setup_parking_scenario_with_pedestrian,
+                                            setup_complex_scenario, setup_vehicle_crossing_scenario)
 
 from rcta_system.perception import RctaPerception
 from rcta_system.decision_making import DecisionMaker
@@ -56,8 +58,10 @@ def main():
 
             print("MAIN [Initializing scenario]")
             spawner = Spawner(manager.world, manager.actor_list)
-            ego_vehicle, target_vehicle = setup_parking_scenario(manager.world, spawner)
+            #ego_vehicle, target_vehicle = setup_parking_scenario(manager.world, spawner)
             #ego_vehicle = setup_parking_scenario_with_pedestrian(manager.world, spawner)
+            ego_vehicle = setup_complex_scenario(manager.world, spawner)
+            #ego_vehicle = setup_vehicle_crossing_scenario(manager.world, spawner)
 
             print("MAIN [Initializing perception and Sensor manager]")
             perception_system = RctaPerception()
@@ -119,15 +123,16 @@ def main():
                 dangerous_objects = decision_maker.evaluate(all_perception_data, is_reversing)
                 mqtt_publisher.publish_status(dangerous_objects)
 
-                #Finestre di visualizzazione
-                for side, channel in perception_system.channels.items():
-                    frame = channel.display_frame
-                    data = channel.perception_data
+                if True:
+                    #Finestre di visualizzazione
+                    for side, channel in perception_system.channels.items():
+                        frame = channel.display_frame
+                        data = channel.perception_data
 
-                    if frame is not None:
-                        # Disegna le info sul frame (in-place)
-                        draw_fused_detections(frame, data)
-                        cv2.imshow(f"{side.upper()} RGBD camera", frame)
+                        if frame is not None:
+                            # Disegna le info sul frame (in-place)
+                            draw_fused_detections(frame, data)
+                            cv2.imshow(f"{side.upper()} RGBD camera", frame)
 
 
                 cv2.waitKey(1)
