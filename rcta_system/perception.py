@@ -34,39 +34,68 @@ def _decode_depth_to_meters(array_uint8):
     return depth_meters
 
 
-class RctaCameraChannel:
+class RctaPerception:
     """
-    Manage a single pair of cameras (RGB + depth) in a dedicated thread,
-    Do data fusion and produce a frame.
+    Manager of perception channels based on CARLA's sensor.listen() callbacks.
+    All processing happens inside the callback threads.
     """
 
-    def __init__(self, side, detector, detector_lock):
-        self.side = side
-        self.detector = detector
-        self.detector_lock = detector_lock  # Lock condiviso per l'inferenza
-        self.running = True
+    def __init__(self):
 
-        # Buffer per i dati grezzi in arrivo dai callback
-        self.latest_rgb_img = None
-        self.latest_depth_img = None
-        self.has_new_data = False
+        # --- Modello di gestione YOLO (1 o 3 istanze) ---
+        if config.USE_SHARED_YOLO_INSTANCE:
+            print("PERCEPTION [Initializing with 1 Shared YOLO model]")
+            detector = ObjectDetector()
+            lock = threading.Lock()
+            self.detector_rear = detector
+            self.lock_rear = lock
+            self.detector_left = detector
+            self.lock_left = lock
+            self.detector_right = detector
+            self.lock_right = lock
+        else:
+            print("PERCEPTION [Initializing with 3 Independent YOLO models]")
+            self.detector_rear = ObjectDetector()
+            self.lock_rear = threading.Lock()
+            self.detector_left = ObjectDetector()
+            self.lock_left = threading.Lock()
+            self.detector_right = ObjectDetector()
+            self.lock_right = threading.Lock()
 
-        # Dati pronti per il main thread
-        self.display_frame = None
-        self.perception_data = {'dist': float('inf'), 'ttc': float('inf'), 'objects': []}
+        # --- Buffer per i dati grezzi in arrivo dai callback ---
+        self.latest_rear_rgb = None
+        self.latest_rear_depth = None
+        self.latest_left_rgb = None
+        self.latest_left_depth = None
+        self.latest_right_rgb = None
+        self.latest_right_depth = None
 
-        # dizionario tracker
-        # Formato: { track_id: {'dist': float, 'time': float, 'class': str} }
-        self.tracked_objects = {}
-        self.last_cleanup_time = 0.0
+        # --- "Store Globale" per i dati pronti per il main thread ---
+        self.display_frame_rear = None
+        self.display_frame_left = None
+        self.display_frame_right = None
 
-        self.STALE_TRACK_THRESHOLD_SEC = 1.0  # Tempo per cui tenere un track se scompare
-        self.MIN_VELOCITY_FOR_TTC_MPS = 0.5  # Velocità minima (m/s) per calcolare il TTC
+        default_data = {'dist': float('inf'), 'ttc': float('inf'), 'objects': []}
+        self.perception_data = {
+            'rear': default_data.copy(),
+            'left': default_data.copy(),
+            'right': default_data.copy()
+        }
 
-        # Avvio del worker thread
-        self.thread = threading.Thread(target=self._worker_loop, daemon=True)
-        self.thread.start()
-        print(f"PERCEPTION [Channel '{side}' started]")
+        # --- Stato dei Tracker (uno per canale) ---
+        self.tracked_objects_rear = {}
+        self.tracked_objects_left = {}
+        self.tracked_objects_right = {}
+
+        self.last_cleanup_time_rear = 0.0
+        self.last_cleanup_time_left = 0.0
+        self.last_cleanup_time_right = 0.0
+
+        # --- Costanti ---
+        self.STALE_TRACK_THRESHOLD_SEC = 1.0
+        self.MIN_VELOCITY_FOR_TTC_MPS = 0.5
+
+    # --- Funzioni Helper (precedentemente in RctaCameraChannel) ---
 
     def _to_numpy_rgb(self, carla_img):
         array = np.frombuffer(carla_img.raw_data, dtype=np.uint8)
@@ -74,202 +103,172 @@ class RctaCameraChannel:
         return array[:, :, :3]  # BGR per OpenCV
 
     def _to_depth_meters(self, carla_img):
-        # Converte i dati grezzi in un array (molto veloce)
         array_uint8 = np.frombuffer(carla_img.raw_data, dtype=np.uint8)
         array_uint8 = np.reshape(array_uint8, (carla_img.height, carla_img.width, 4))
-        # Chiama la funzione JIT compilata
         return _decode_depth_to_meters(array_uint8)
 
-
-    def _worker_loop(self):
-        """Main loop to process RGB + Depth"""
-        while self.running:
-            if self.has_new_data and self.latest_rgb_img and self.latest_depth_img:
-                # Prendi snapshot dei dati attuali
-                rgb_carla = self.latest_rgb_img
-                depth_carla = self.latest_depth_img
-                self.has_new_data = False  # Reset flag
-                # Conversione dati
-                rgb_np = self._to_numpy_rgb(rgb_carla)
-                depth_meters = self._to_depth_meters(depth_carla)
-                timestamp = depth_carla.timestamp
-
-                # YOLO Detection (Sincronizzata con Lock per sicurezza GPU)
-                with self.detector_lock:
-                    detections = self.detector.detect(rgb_np)
-
-                # Fusione RGB-Depth e calcolo TTC settore
-                fused_objects, min_dist = self._fuse_results(detections, depth_meters)
-
-                # calcola ttc per ogni oggetto e aggiorna lo stato
-                self._update_tracks_and_calc_ttc(fused_objects, timestamp)
-                # pulisce i vecchi track
-                self._cleanup_stale_tracks(timestamp)
-
-                # Trova il TTC minimo tra tutti gli oggetti del settore
-                min_sector_ttc = float('inf')
-                for obj in fused_objects:
-                    if obj.get('ttc_obj', float('inf')) < min_sector_ttc:
-                        min_sector_ttc = obj['ttc_obj']
-
-                # Aggiorna dati pronti per il main
-                self.display_frame = rgb_np.copy()
-                self.perception_data = {
-                    'dist': min_dist,
-                    'ttc': min_sector_ttc,  # Ora è il min TTC *degli oggetti*
-                    'objects': fused_objects  # Lista di oggetti con 'ttc_obj' individuale
-                }
-            else:
-                time.sleep(0.005)  # Evita busy-waiting eccessivo
-
     def _fuse_results(self, detections, depth_map):
-        """
-        For each detection, find the average distance in the corresponding depth map.
-        Returns enriched objects and the global minimum distance of the scene.
-        """
         h, w = depth_map.shape
         min_scene_dist = float('inf')
         fused = []
 
         for det in detections:
-            # Coordinate BBox
             x1, y1, x2, y2 = map(int, det['bbox'])
             x1, x2 = max(0, x1), min(w, x2)
             y1, y2 = max(0, y1), min(h, y2)
 
             obj_dist = float('inf')
             if x1 < x2 and y1 < y2:
-                # Estrai ROI dalla mappa di profondità
                 roi = depth_map[y1:y2, x1:x2]
-                # Usa il 10° percentile per trovare la distanza dell'oggetto ignorando outlier
                 if roi.size > 0:
                     obj_dist = np.percentile(roi, 10)
 
             det['dist'] = obj_dist
             det['ttc_obj'] = float('inf')
-
             fused.append(det)
             if obj_dist < min_scene_dist:
                 min_scene_dist = obj_dist
-
         return fused, min_scene_dist
 
-    def _update_tracks_and_calc_ttc(self, current_objects, current_time):
-        """
-        Aggiorna lo stato degli oggetti tracciati e calcola il TTC per ognuno.
-        Modifica 'current_objects' in-place aggiungendo 'ttc_obj'.
-        """
+    def _update_tracks_and_calc_ttc(self, current_objects, current_time, tracker_dict):
+        """Modificato per accettare un dizionario tracker specifico."""
         for obj in current_objects:
             track_id = obj['id']
-
-            if track_id in self.tracked_objects:
-                # Oggetto già tracciato
-                prev_state = self.tracked_objects[track_id]
-
+            if track_id in tracker_dict:
+                prev_state = tracker_dict[track_id]
                 delta_t = current_time - prev_state['time']
-                delta_d = prev_state['dist'] - obj['dist']  # Positivo se si avvicina
+                delta_d = prev_state['dist'] - obj['dist']
 
-                # Calcola TTC solo se abbiamo uno storico e si sta avvicinando
                 if delta_t > 0.0:
-                    rel_velocity = delta_d / delta_t  # m/s
-
+                    rel_velocity = delta_d / delta_t
                     if rel_velocity > self.MIN_VELOCITY_FOR_TTC_MPS:
-                        # Calcola il TTC solo se la velocità è significativa
                         ttc = obj['dist'] / rel_velocity
-                        obj['ttc_obj'] = ttc  # Assegna il TTC all'oggetto specifico
+                        obj['ttc_obj'] = ttc
 
-            # Aggiorna (o aggiungi) lo stato dell'oggetto
-            self.tracked_objects[track_id] = {
+            tracker_dict[track_id] = {
                 'dist': obj['dist'],
                 'time': current_time,
                 'class': obj['class']
             }
 
-    def _cleanup_stale_tracks(self, current_time):
-        """
-        Rimuove gli oggetti da self.tracked_objects se non visti per un po'.
-        """
-        # Esegui la pulizia solo ogni tanto per efficienza
-        if current_time - self.last_cleanup_time < self.STALE_TRACK_THRESHOLD_SEC:
-            return
-
-        self.last_cleanup_time = current_time
-
+    def _cleanup_stale_tracks(self, current_time, tracker_dict):
+        """Modificato per accettare un dizionario tracker specifico."""
         stale_ids = [
-            track_id for track_id, state in self.tracked_objects.items()
+            track_id for track_id, state in tracker_dict.items()
             if current_time - state['time'] > self.STALE_TRACK_THRESHOLD_SEC
         ]
-
         for track_id in stale_ids:
-            del self.tracked_objects[track_id]
+            del tracker_dict[track_id]
 
-    def rgb_callback(self, img):
-        self.latest_rgb_img = img
-        # Consideriamo i dati pronti solo se abbiamo anche una depth recente
-        if self.latest_depth_img is not None: self.has_new_data = True
+    # --- Wrapper Callbacks ---
 
-    def depth_callback(self, img):
-        self.latest_depth_img = img
+    def rear_depth_callback(self, img):
+        self.latest_rear_depth = img
 
+    def rear_rgb_callback(self, img):
+        """ Tutta la logica di processing ora è qui (stile notebook) """
+        if self.latest_rear_depth is None:
+            return  # Aspetta che arrivi un'immagine di profondità
 
-class RctaPerception:
-    """Manager of a single independent channel"""
+        # Snapshot dei dati
+        rgb_carla = img
+        depth_carla = self.latest_rear_depth
 
-    def __init__(self):
-        if config.USE_SHARED_YOLO_INSTANCE:
-            # Modalità 1: Un solo modello YOLO e un solo Lock condivisi
-            print("PERCEPTION [Initializing with 1 Shared YOLO model]")
-            detector = ObjectDetector()
-            lock = threading.Lock()  # Lock per condividere l'unica istanza YOLO
+        # Conversione
+        rgb_np = self._to_numpy_rgb(rgb_carla)
+        depth_meters = self._to_depth_meters(depth_carla)
+        timestamp = depth_carla.timestamp
 
-            self.channels = {
-                'rear': RctaCameraChannel('rear', detector, lock),
-                'left': RctaCameraChannel('left', detector, lock),
-                'right': RctaCameraChannel('right', detector, lock)
-            }
-        else:
-            # Modalità 2: Tre modelli YOLO e tre Lock indipendenti
-            print("PERCEPTION [Initializing with 3 Independent YOLO models]")
+        # YOLO Detection
+        with self.lock_rear:
+            detections = self.detector_rear.detect(rgb_np)
 
-            # Crea un'istanza (e un lock) separata per ogni canale
-            detector_rear = ObjectDetector()
-            lock_rear = threading.Lock()
+        # Fusione e Calcolo TTC
+        fused_objects, min_dist = self._fuse_results(detections, depth_meters)
 
-            detector_left = ObjectDetector()
-            lock_left = threading.Lock()
+        # Aggiorna e pulisce il tracker specifico
+        if timestamp - self.last_cleanup_time_rear > self.STALE_TRACK_THRESHOLD_SEC:
+            self._cleanup_stale_tracks(timestamp, self.tracked_objects_rear)
+            self.last_cleanup_time_rear = timestamp
+        self._update_tracks_and_calc_ttc(fused_objects, timestamp, self.tracked_objects_rear)
 
-            detector_right = ObjectDetector()
-            lock_right = threading.Lock()
+        min_sector_ttc = min((obj.get('ttc_obj', float('inf')) for obj in fused_objects), default=float('inf'))
 
-            self.channels = {
-                'rear': RctaCameraChannel('rear', detector_rear, lock_rear),
-                'left': RctaCameraChannel('left', detector_left, lock_left),
-                'right': RctaCameraChannel('right', detector_right, lock_right)
-            }
+        # Aggiorna lo "Store Globale" per il main thread
+        self.display_frame_rear = rgb_np.copy()
+        self.perception_data['rear'] = {
+            'dist': min_dist,
+            'ttc': min_sector_ttc,
+            'objects': fused_objects
+        }
 
+    def left_depth_callback(self, img):
+        self.latest_left_depth = img
 
-    # Wrapper callbacks
-    def rear_rgb_callback(self, i):
-        self.channels['rear'].rgb_callback(i)
+    def left_rgb_callback(self, img):
+        if self.latest_left_depth is None:
+            return
 
-    def rear_depth_callback(self, i):
-        self.channels['rear'].depth_callback(i)
+        rgb_carla = img
+        depth_carla = self.latest_left_depth
 
-    def left_rgb_callback(self, i):
-        self.channels['left'].rgb_callback(i)
+        rgb_np = self._to_numpy_rgb(rgb_carla)
+        depth_meters = self._to_depth_meters(depth_carla)
+        timestamp = depth_carla.timestamp
 
-    def left_depth_callback(self, i):
-        self.channels['left'].depth_callback(i)
+        with self.lock_left:
+            detections = self.detector_left.detect(rgb_np)
 
-    def right_rgb_callback(self, i):
-        self.channels['right'].rgb_callback(i)
+        fused_objects, min_dist = self._fuse_results(detections, depth_meters)
 
-    def right_depth_callback(self, i):
-        self.channels['right'].depth_callback(i)
+        if timestamp - self.last_cleanup_time_left > self.STALE_TRACK_THRESHOLD_SEC:
+            self._cleanup_stale_tracks(timestamp, self.tracked_objects_left)
+            self.last_cleanup_time_left = timestamp
+        self._update_tracks_and_calc_ttc(fused_objects, timestamp, self.tracked_objects_left)
+
+        min_sector_ttc = min((obj.get('ttc_obj', float('inf')) for obj in fused_objects), default=float('inf'))
+
+        self.display_frame_left = rgb_np.copy()
+        self.perception_data['left'] = {
+            'dist': min_dist,
+            'ttc': min_sector_ttc,
+            'objects': fused_objects
+        }
+
+    def right_depth_callback(self, img):
+        self.latest_right_depth = img
+
+    def right_rgb_callback(self, img):
+        if self.latest_right_depth is None:
+            return
+
+        rgb_carla = img
+        depth_carla = self.latest_right_depth
+
+        rgb_np = self._to_numpy_rgb(rgb_carla)
+        depth_meters = self._to_depth_meters(depth_carla)
+        timestamp = depth_carla.timestamp
+
+        with self.lock_right:
+            detections = self.detector_right.detect(rgb_np)
+
+        fused_objects, min_dist = self._fuse_results(detections, depth_meters)
+
+        if timestamp - self.last_cleanup_time_right > self.STALE_TRACK_THRESHOLD_SEC:
+            self._cleanup_stale_tracks(timestamp, self.tracked_objects_right)
+            self.last_cleanup_time_right = timestamp
+        self._update_tracks_and_calc_ttc(fused_objects, timestamp, self.tracked_objects_right)
+
+        min_sector_ttc = min((obj.get('ttc_obj', float('inf')) for obj in fused_objects), default=float('inf'))
+
+        self.display_frame_right = rgb_np.copy()
+        self.perception_data['right'] = {
+            'dist': min_dist,
+            'ttc': min_sector_ttc,
+            'objects': fused_objects
+        }
 
     def get_all_perception_data(self):
-        """Join all data in a single dictionary"""
-        return {
-            side: channel.perception_data
-            for side, channel in self.channels.items()
-        }
+        """
+Standard deviation of the main 'global' store"""
+        return self.perception_data

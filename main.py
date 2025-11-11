@@ -138,15 +138,24 @@ def main():
                 mqtt_publisher.publish_status(dangerous_objects)
 
                 if True:
-                    #Finestre di visualizzazione
-                    for side, channel in perception_system.channels.items():
-                        frame = channel.display_frame
-                        data = channel.perception_data
+                    # Legge i frame direttamente dallo "store globale"
+                    if perception_system.display_frame_rear is not None:
+                        frame = perception_system.display_frame_rear
+                        data = perception_system.perception_data['rear']
+                        draw_fused_detections(frame, data)
+                        cv2.imshow("REAR RGBD camera", frame)
 
-                        if frame is not None:
-                            # Disegna le info sul frame (in-place)
-                            draw_fused_detections(frame, data)
-                            cv2.imshow(f"{side.upper()} RGBD camera", frame)
+                    if perception_system.display_frame_left is not None:
+                        frame = perception_system.display_frame_left
+                        data = perception_system.perception_data['left']
+                        draw_fused_detections(frame, data)
+                        cv2.imshow("LEFT RGBD camera", frame)
+
+                    if perception_system.display_frame_right is not None:
+                        frame = perception_system.display_frame_right
+                        data = perception_system.perception_data['right']
+                        draw_fused_detections(frame, data)
+                        cv2.imshow("RIGHT RGBD camera", frame)
 
 
                 cv2.waitKey(1)
