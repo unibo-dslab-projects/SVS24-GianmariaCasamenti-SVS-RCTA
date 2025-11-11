@@ -1,18 +1,14 @@
 import carla
 import random
 
+
 class Spawner:
-    """Handles the generation of actors"""
     def __init__(self, world, actor_list):
         self.world = world
         self.actor_list = actor_list
         self.blueprint_library = self.world.get_blueprint_library()
 
     def spawn_vehicle(self, model, spawn_point=None, autopilot=False):
-        """Spawn veichles according to the model at a specific random point
-        Returns:
-            Carla.Actor: spawned veichles actor, or None on failure.
-        """
         vehicle_bp = self.blueprint_library.filter(model)[0]
 
         if spawn_point is None:
@@ -33,9 +29,6 @@ class Spawner:
         return vehicle
 
     def spawn_pedestrian(self, model, spawn_point, destination, speed):
-        """
-        Creates a pedestrian and set it to walk.
-        """
         walker_bp = self.blueprint_library.filter(model)[0]
         if walker_bp.has_attribute('is_invincible'):
             walker_bp.set_attribute('is_invincible', 'false')

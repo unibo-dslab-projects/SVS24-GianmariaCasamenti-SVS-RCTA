@@ -9,25 +9,15 @@ from rcta_system.object_detector import ObjectDetector
 
 @numba.jit(nopython=True, fastmath=True)
 def _decode_depth_to_meters(array_uint8):
-    """
-    Funzione compilata JIT (ad altissima velocità) per convertire
-    l'immagine di profondità BGRA di CARLA in metri.
-    """
     h, w, _ = array_uint8.shape
-    # Crea una nuova matrice float32 per il risultato
     depth_meters = np.empty((h, w), dtype=np.float32)
-
-    # Pre-calcola la costante di normalizzazione
     inv_max_val = 1.0 / (256.0 * 256.0 * 256.0 - 1.0)
 
     for y in range(h):
         for x in range(w):
-            # Estrai i canali (CARLA è BGRA)
             B = float(array_uint8[y, x, 0])
             G = float(array_uint8[y, x, 1])
             R = float(array_uint8[y, x, 2])
-
-            # Calcola la profondità normalizzata e poi in metri
             normalized = (R + G * 256.0 + B * 256.0 * 256.0) * inv_max_val
             depth_meters[y, x] = normalized * 1000.0
 
@@ -35,34 +25,15 @@ def _decode_depth_to_meters(array_uint8):
 
 
 class RctaPerception:
-    """
-    Manager of perception channels based on CARLA's sensor.listen() callbacks.
-    All processing happens inside the callback threads.
-    """
-
     def __init__(self):
+        print("PERCEPTION [Initializing with 3 Independent YOLO models]")
+        self.detector_rear = ObjectDetector()
+        self.lock_rear = threading.Lock()
+        self.detector_left = ObjectDetector()
+        self.lock_left = threading.Lock()
+        self.detector_right = ObjectDetector()
+        self.lock_right = threading.Lock()
 
-        # --- Modello di gestione YOLO (1 o 3 istanze) ---
-        if config.USE_SHARED_YOLO_INSTANCE:
-            print("PERCEPTION [Initializing with 1 Shared YOLO model]")
-            detector = ObjectDetector()
-            lock = threading.Lock()
-            self.detector_rear = detector
-            self.lock_rear = lock
-            self.detector_left = detector
-            self.lock_left = lock
-            self.detector_right = detector
-            self.lock_right = lock
-        else:
-            print("PERCEPTION [Initializing with 3 Independent YOLO models]")
-            self.detector_rear = ObjectDetector()
-            self.lock_rear = threading.Lock()
-            self.detector_left = ObjectDetector()
-            self.lock_left = threading.Lock()
-            self.detector_right = ObjectDetector()
-            self.lock_right = threading.Lock()
-
-        # --- Buffer per i dati grezzi in arrivo dai callback ---
         self.latest_rear_rgb = None
         self.latest_rear_depth = None
         self.latest_left_rgb = None
@@ -70,7 +41,6 @@ class RctaPerception:
         self.latest_right_rgb = None
         self.latest_right_depth = None
 
-        # --- "Store Globale" per i dati pronti per il main thread ---
         self.display_frame_rear = None
         self.display_frame_left = None
         self.display_frame_right = None
@@ -82,7 +52,6 @@ class RctaPerception:
             'right': default_data.copy()
         }
 
-        # --- Stato dei Tracker (uno per canale) ---
         self.tracked_objects_rear = {}
         self.tracked_objects_left = {}
         self.tracked_objects_right = {}
@@ -91,16 +60,31 @@ class RctaPerception:
         self.last_cleanup_time_left = 0.0
         self.last_cleanup_time_right = 0.0
 
-        # --- Costanti ---
         self.STALE_TRACK_THRESHOLD_SEC = 1.0
         self.MIN_VELOCITY_FOR_TTC_MPS = 0.5
 
-    # --- Funzioni Helper (precedentemente in RctaCameraChannel) ---
+    def rear_rgb_callback(self, img):
+        self.latest_rear_rgb = img
+
+    def rear_depth_callback(self, img):
+        self.latest_rear_depth = img
+
+    def left_rgb_callback(self, img):
+        self.latest_left_rgb = img
+
+    def left_depth_callback(self, img):
+        self.latest_left_depth = img
+
+    def right_rgb_callback(self, img):
+        self.latest_right_rgb = img
+
+    def right_depth_callback(self, img):
+        self.latest_right_depth = img
 
     def _to_numpy_rgb(self, carla_img):
         array = np.frombuffer(carla_img.raw_data, dtype=np.uint8)
         array = np.reshape(array, (carla_img.height, carla_img.width, 4))
-        return array[:, :, :3]  # BGR per OpenCV
+        return array[:, :, :3]
 
     def _to_depth_meters(self, carla_img):
         array_uint8 = np.frombuffer(carla_img.raw_data, dtype=np.uint8)
@@ -131,7 +115,6 @@ class RctaPerception:
         return fused, min_scene_dist
 
     def _update_tracks_and_calc_ttc(self, current_objects, current_time, tracker_dict):
-        """Modificato per accettare un dizionario tracker specifico."""
         for obj in current_objects:
             track_id = obj['id']
             if track_id in tracker_dict:
@@ -152,7 +135,6 @@ class RctaPerception:
             }
 
     def _cleanup_stale_tracks(self, current_time, tracker_dict):
-        """Modificato per accettare un dizionario tracker specifico."""
         stale_ids = [
             track_id for track_id, state in tracker_dict.items()
             if current_time - state['time'] > self.STALE_TRACK_THRESHOLD_SEC
@@ -160,33 +142,22 @@ class RctaPerception:
         for track_id in stale_ids:
             del tracker_dict[track_id]
 
-    # --- Wrapper Callbacks ---
+    def process_rear_camera(self):
+        if self.latest_rear_rgb is None or self.latest_rear_depth is None:
+            return
 
-    def rear_depth_callback(self, img):
-        self.latest_rear_depth = img
-
-    def rear_rgb_callback(self, img):
-        """ Tutta la logica di processing ora è qui (stile notebook) """
-        if self.latest_rear_depth is None:
-            return  # Aspetta che arrivi un'immagine di profondità
-
-        # Snapshot dei dati
-        rgb_carla = img
+        rgb_carla = self.latest_rear_rgb
         depth_carla = self.latest_rear_depth
 
-        # Conversione
         rgb_np = self._to_numpy_rgb(rgb_carla)
         depth_meters = self._to_depth_meters(depth_carla)
         timestamp = depth_carla.timestamp
 
-        # YOLO Detection
         with self.lock_rear:
             detections = self.detector_rear.detect(rgb_np)
 
-        # Fusione e Calcolo TTC
         fused_objects, min_dist = self._fuse_results(detections, depth_meters)
 
-        # Aggiorna e pulisce il tracker specifico
         if timestamp - self.last_cleanup_time_rear > self.STALE_TRACK_THRESHOLD_SEC:
             self._cleanup_stale_tracks(timestamp, self.tracked_objects_rear)
             self.last_cleanup_time_rear = timestamp
@@ -194,7 +165,6 @@ class RctaPerception:
 
         min_sector_ttc = min((obj.get('ttc_obj', float('inf')) for obj in fused_objects), default=float('inf'))
 
-        # Aggiorna lo "Store Globale" per il main thread
         self.display_frame_rear = rgb_np.copy()
         self.perception_data['rear'] = {
             'dist': min_dist,
@@ -202,14 +172,11 @@ class RctaPerception:
             'objects': fused_objects
         }
 
-    def left_depth_callback(self, img):
-        self.latest_left_depth = img
-
-    def left_rgb_callback(self, img):
-        if self.latest_left_depth is None:
+    def process_left_camera(self):
+        if self.latest_left_rgb is None or self.latest_left_depth is None:
             return
 
-        rgb_carla = img
+        rgb_carla = self.latest_left_rgb
         depth_carla = self.latest_left_depth
 
         rgb_np = self._to_numpy_rgb(rgb_carla)
@@ -235,14 +202,11 @@ class RctaPerception:
             'objects': fused_objects
         }
 
-    def right_depth_callback(self, img):
-        self.latest_right_depth = img
-
-    def right_rgb_callback(self, img):
-        if self.latest_right_depth is None:
+    def process_right_camera(self):
+        if self.latest_right_rgb is None or self.latest_right_depth is None:
             return
 
-        rgb_carla = img
+        rgb_carla = self.latest_right_rgb
         depth_carla = self.latest_right_depth
 
         rgb_np = self._to_numpy_rgb(rgb_carla)
@@ -268,7 +232,10 @@ class RctaPerception:
             'objects': fused_objects
         }
 
+    def process_all_cameras(self):
+        self.process_rear_camera()
+        self.process_left_camera()
+        self.process_right_camera()
+
     def get_all_perception_data(self):
-        """
-Standard deviation of the main 'global' store"""
         return self.perception_data

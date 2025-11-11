@@ -50,11 +50,11 @@ TARGET_SPAWN_TRANSFORM = carla.Transform(
 TARGET_VELOCITY = carla.Vector3D(x=0, y=2.0, z=0)
 PEDESTRIAN_MODEL = 'walker.pedestrian.0002'
 PEDESTRIAN_SPAWN_TRANSFORM = carla.Transform(
-    carla.Location(x=-31.4, y=-40.0, z=0.5),
+    carla.Location(x=-33, y=-40.0, z=0.5),
     carla.Rotation(yaw =90)
 )
 
-PEDESTRIAN_DESTINATION = carla.Location(x=-31.4, y=-30.2, z=0.5)
+PEDESTRIAN_DESTINATION = carla.Location(x=-31.4, y=-25.2, z=0.5)
 PEDESTRIAN_WALK_SPEED = 1.4
 
 PEDESTRIAN_ACTORS = [
@@ -142,9 +142,17 @@ THROTTLE = 0.6
 STEER_INCREMENT = 0.05
 
 #_____________________________________RCTA SETTING________________________
-TTC_THRESHOLD = 3.5 #secondi
-DIST_THRESHOLD = 4.0 #metri
-DEBUG = False
+TTC_THRESHOLD = 2.5 #secondi
+DIST_THRESHOLD = 2.0 #metri
+DEBUG = True
 
-USE_SHARED_YOLO_INSTANCE = False
+# True = asincrono (più stile notebook), False = sincrono (originale)
+ASYNC_MODE = True
 
+# Target FPS per il main loop (usato con clock.tick())
+TARGET_FPS = 20  # Deve corrispondere a 1/fixed_delta_seconds se sincrono
+DELTA_SECONDS = 0.05
+# Sensor tick per le camere (in secondi)
+# 0.0 = aggiorna ogni tick, >0.0 = aggiorna ogni N secondi
+SENSOR_TICK = 0.0  # Imposta a 0.05 per 20 Hz se vuoi rate ridotto
+# ================================================
