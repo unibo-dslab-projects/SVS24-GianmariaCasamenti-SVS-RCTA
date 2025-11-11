@@ -1,6 +1,9 @@
+from time import perf_counter
+
 import numpy as np
 import config
 from ultralytics import YOLO
+import time
 
 class ObjectDetector:
     """
@@ -38,6 +41,8 @@ class ObjectDetector:
         # YOLO = RGB --> OpenCV (e CARLA) usa BGR.
         rgb_image = bgr_image[:, :, ::-1]
 
+        start_time = time.perf_counter()
+
         # Esegui l'inferenza
         # Filtriamo già qui per classi e confidenza per essere più veloci
         results = self.model.track(
@@ -47,6 +52,10 @@ class ObjectDetector:
             conf=0.5,
             persist = True
         )
+
+        end_time = time.perf_counter()
+        inference_time_ms = (end_time -start_time)*1000
+        #print(f"DEBUG [ObjectDetector] Inference time: {inference_time_ms:.2f} ms")
 
         detections = []
 
