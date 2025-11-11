@@ -114,7 +114,7 @@ def main():
                 perception_system.process_all_cameras()
 
                 all_perception_data = perception_system.get_all_perception_data()
-                is_reversing = control.reverse
+                is_reversing = control.reverse or config.DEBUG
                 dangerous_objects = decision_maker.evaluate(all_perception_data, is_reversing)
                 mqtt_publisher.publish_status(dangerous_objects)
 

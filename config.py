@@ -55,7 +55,7 @@ PEDESTRIAN_SPAWN_TRANSFORM = carla.Transform(
 )
 
 PEDESTRIAN_DESTINATION = carla.Location(x=-31.4, y=-25.2, z=0.5)
-PEDESTRIAN_WALK_SPEED = 1.4
+PEDESTRIAN_WALK_SPEED = 2.0
 
 PEDESTRIAN_ACTORS = [
     {
@@ -136,14 +136,9 @@ RIGHT_CAMERA_TRANSFORM = carla.Transform(
 )
 YOLO_MODEL_PATH = 'models/yolov8n.pt'
 
-
-#_____________________________________CONTROLLER SETTING________________________
-THROTTLE = 0.6
-STEER_INCREMENT = 0.05
-
 #_____________________________________RCTA SETTING________________________
 TTC_THRESHOLD = 2.5 #secondi
-DIST_THRESHOLD = 2.0 #metri
+DIST_THRESHOLD = 3.0 #metri
 DEBUG = True
 
 # True = asincrono (più stile notebook), False = sincrono (originale)

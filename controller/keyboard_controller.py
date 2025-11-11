@@ -1,57 +1,53 @@
-import  carla
+import carla
 import pygame
-
 import config
 
 
 class KeyboardController:
-    """
-    Basic controller for keyboard WASD
-
-    - W: Accelerator (forward)
-    - S: Accelerator (reverse)
-    - A: Turn left
-    - D: Turn right
-    - Space bar: Brake
-    """
     def __init__(self):
         self._control = carla.VehicleControl()
-        self._throttle = config.THROTTLE
-        self._steer_increment = config.STEER_INCREMENT
+        self._throttle = 0.6
+        self._steer_increment = 0.05
         self._steer = 0.0
+        self._brake_strength = 1.0
+        self._max_throttle = 0.8
+        self._min_throttle = 0.3
+        self._steer_damping = 0.15
 
     def parse_input(self, keys):
-        """
-        Take a pressed button and update a Carla vehicle
-        Return object updated
-        """
-        #reset
         self._control.throttle = 0.0
         self._control.brake = 0.0
         self._control.reverse = False
 
-        # Accelerazione / Retromarcia
-        if keys[pygame.K_UP]:
+        forward = keys[pygame.K_w]
+        backward = keys[pygame.K_s]
+        left = keys[pygame.K_a]
+        right = keys[pygame.K_d]
+        brake = keys[pygame.K_SPACE]
+
+        if forward and not backward:
             self._control.throttle = self._throttle
-        elif keys[pygame.K_DOWN]:
+            self._control.reverse = False
+        elif backward and not forward:
             self._control.throttle = self._throttle
             self._control.reverse = True
 
-        # Freno
-        if keys[pygame.K_SPACE]:
-            self._control.brake = 1.0
+        if brake:
+            self._control.brake = self._brake_strength
+            self._control.throttle = 0.0
 
-        # Sterzo
-        if keys[pygame.K_LEFT]:
+        if left and not right:
             self._steer = max(self._steer - self._steer_increment, -1.0)
-        elif keys[pygame.K_RIGHT]:
+        elif right and not left:
             self._steer = min(self._steer + self._steer_increment, 1.0)
         else:
-            if self._steer > 0.0:
-                self._steer = max(self._steer - self._steer_increment, 0.0)
-            elif self._steer < 0.0:
-                self._steer = min(self._steer + self._steer_increment, 0.0)
+            if abs(self._steer) > 0.01:
+                self._steer *= (1.0 - self._steer_damping)
+            else:
+                self._steer = 0.0
 
-        self._control.steer = round(self._steer, 2)
+        self._control.steer = round(self._steer, 3)
+        self._control.hand_brake = False
+        self._control.manual_gear_shift = False
+
         return self._control
-
