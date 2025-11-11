@@ -29,10 +29,10 @@ Campus of Cesena – Italy
 ## **Index**
 
 - [1️⃣ Introduction](sections/1_Introduction.md)
-- [2️⃣ Requirements](sections/2_Development.md)
-- [3️⃣ Design](sections/3_Requirements.md)
-- [4️⃣ Tecnologies used](sections/4_Architecture.md)
-- [5️⃣ Deployment](sections/5_Design.md)
-- [6️⃣ Conclusions](sections/6_Implementation.md)
+- [2️⃣ Requirements](sections/2_Requirements.md)
+- [3️⃣ Design](sections/3_Design.md)
+- [4️⃣ Tecnologies used](sections/4_Tecnologies.md)
+- [5️⃣ Deployment](sections/5_Deployment.md)
+- [6️⃣ Conclusions](sections/6_Conclusions.md)
 
 ---
