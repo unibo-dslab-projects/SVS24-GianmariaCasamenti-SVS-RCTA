@@ -2,6 +2,7 @@ import threading
 import numpy as np
 import cv2
 import time
+import config  # <-- AGGIUNTO IMPORT
 from rcta_system.object_detector import ObjectDetector
 
 
@@ -26,7 +27,7 @@ class RctaCameraChannel:
         self.display_frame = None
         self.perception_data = {'dist': float('inf'), 'ttc': float('inf'), 'objects': []}
 
-        #dizionario tracker
+        # dizionario tracker
         # Formato: { track_id: {'dist': float, 'time': float, 'class': str} }
         self.tracked_objects = {}
         self.last_cleanup_time = 0.0
@@ -64,16 +65,16 @@ class RctaCameraChannel:
                 depth_meters = self._to_depth_meters(depth_carla)
                 timestamp = depth_carla.timestamp
 
-                #YOLO Detection (Sincronizzata con Lock per sicurezza GPU)
+                # YOLO Detection (Sincronizzata con Lock per sicurezza GPU)
                 with self.detector_lock:
                     detections = self.detector.detect(rgb_np)
 
-                #Fusione RGB-Depth e calcolo TTC settore
+                # Fusione RGB-Depth e calcolo TTC settore
                 fused_objects, min_dist = self._fuse_results(detections, depth_meters)
 
-                #calcola ttc per ogni oggetto e aggiorna lo stato
+                # calcola ttc per ogni oggetto e aggiorna lo stato
                 self._update_tracks_and_calc_ttc(fused_objects, timestamp)
-                #pulisce i vecchi track
+                # pulisce i vecchi track
                 self._cleanup_stale_tracks(timestamp)
 
                 # Trova il TTC minimo tra tutti gli oggetti del settore
@@ -82,12 +83,12 @@ class RctaCameraChannel:
                     if obj.get('ttc_obj', float('inf')) < min_sector_ttc:
                         min_sector_ttc = obj['ttc_obj']
 
-                #Aggiorna dati pronti per il main
+                # Aggiorna dati pronti per il main
                 self.display_frame = rgb_np.copy()
                 self.perception_data = {
                     'dist': min_dist,
-                    'ttc': min_sector_ttc, # Ora è il min TTC *degli oggetti*
-                    'objects': fused_objects # Lista di oggetti con 'ttc_obj' individuale
+                    'ttc': min_sector_ttc,  # Ora è il min TTC *degli oggetti*
+                    'objects': fused_objects  # Lista di oggetti con 'ttc_obj' individuale
                 }
             else:
                 time.sleep(0.005)  # Evita busy-waiting eccessivo
@@ -184,14 +185,41 @@ class RctaCameraChannel:
 
 class RctaPerception:
     """Manager of a single independent channel"""
+
     def __init__(self):
-        self.detector = ObjectDetector()
-        self.lock = threading.Lock()  # Lock per condividere l'unica istanza YOLO
-        self.channels = {
-            'rear': RctaCameraChannel('rear', self.detector, self.lock),
-            'left': RctaCameraChannel('left', self.detector, self.lock),
-            'right': RctaCameraChannel('right', self.detector, self.lock)
-        }
+
+        # --- BLOCCO MODIFICATO ---
+        if config.USE_SHARED_YOLO_INSTANCE:
+            # Modalità 1: Un solo modello YOLO e un solo Lock condivisi
+            print("PERCEPTION [Initializing with 1 Shared YOLO model]")
+            detector = ObjectDetector()
+            lock = threading.Lock()  # Lock per condividere l'unica istanza YOLO
+
+            self.channels = {
+                'rear': RctaCameraChannel('rear', detector, lock),
+                'left': RctaCameraChannel('left', detector, lock),
+                'right': RctaCameraChannel('right', detector, lock)
+            }
+        else:
+            # Modalità 2: Tre modelli YOLO e tre Lock indipendenti
+            print("PERCEPTION [Initializing with 3 Independent YOLO models]")
+
+            # Crea un'istanza (e un lock) separata per ogni canale
+            detector_rear = ObjectDetector()
+            lock_rear = threading.Lock()
+
+            detector_left = ObjectDetector()
+            lock_left = threading.Lock()
+
+            detector_right = ObjectDetector()
+            lock_right = threading.Lock()
+
+            self.channels = {
+                'rear': RctaCameraChannel('rear', detector_rear, lock_rear),
+                'left': RctaCameraChannel('left', detector_left, lock_left),
+                'right': RctaCameraChannel('right', detector_right, lock_right)
+            }
+        # --- FINE BLOCCO MODIFICATO ---
 
     # Wrapper callbacks
     def rear_rgb_callback(self, i):

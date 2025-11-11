@@ -55,7 +55,7 @@ class ObjectDetector:
 
         end_time = time.perf_counter()
         inference_time_ms = (end_time -start_time)*1000
-        #print(f"DEBUG [ObjectDetector] Inference time: {inference_time_ms:.2f} ms")
+        print(f"DEBUG [ObjectDetector] Inference time: {inference_time_ms:.2f} ms")
 
         detections = []
 
@@ -83,5 +83,5 @@ class ObjectDetector:
                 'confidence': conf,
                 'bbox': bbox
             })
-            print(detections)
+            #print(detections)
         return detections
