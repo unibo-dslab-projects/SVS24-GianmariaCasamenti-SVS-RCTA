@@ -2,8 +2,36 @@ import threading
 import numpy as np
 import cv2
 import time
-import config  # <-- AGGIUNTO IMPORT
+import config
+import numba
 from rcta_system.object_detector import ObjectDetector
+
+
+@numba.jit(nopython=True, fastmath=True)
+def _decode_depth_to_meters(array_uint8):
+    """
+    Funzione compilata JIT (ad altissima velocità) per convertire
+    l'immagine di profondità BGRA di CARLA in metri.
+    """
+    h, w, _ = array_uint8.shape
+    # Crea una nuova matrice float32 per il risultato
+    depth_meters = np.empty((h, w), dtype=np.float32)
+
+    # Pre-calcola la costante di normalizzazione
+    inv_max_val = 1.0 / (256.0 * 256.0 * 256.0 - 1.0)
+
+    for y in range(h):
+        for x in range(w):
+            # Estrai i canali (CARLA è BGRA)
+            B = float(array_uint8[y, x, 0])
+            G = float(array_uint8[y, x, 1])
+            R = float(array_uint8[y, x, 2])
+
+            # Calcola la profondità normalizzata e poi in metri
+            normalized = (R + G * 256.0 + B * 256.0 * 256.0) * inv_max_val
+            depth_meters[y, x] = normalized * 1000.0
+
+    return depth_meters
 
 
 class RctaCameraChannel:
@@ -46,11 +74,12 @@ class RctaCameraChannel:
         return array[:, :, :3]  # BGR per OpenCV
 
     def _to_depth_meters(self, carla_img):
-        array = np.frombuffer(carla_img.raw_data, dtype=np.uint8)
-        array = np.reshape(array, (carla_img.height, carla_img.width, 4)).astype(np.float64)
-        # Formula standard CARLA per ottenere metri
-        normalized = (array[:, :, 2] + array[:, :, 1] * 256 + array[:, :, 0] * 256 * 256) / (256 ** 3 - 1)
-        return normalized * 1000.0
+        # Converte i dati grezzi in un array (molto veloce)
+        array_uint8 = np.frombuffer(carla_img.raw_data, dtype=np.uint8)
+        array_uint8 = np.reshape(array_uint8, (carla_img.height, carla_img.width, 4))
+        # Chiama la funzione JIT compilata
+        return _decode_depth_to_meters(array_uint8)
+
 
     def _worker_loop(self):
         """Main loop to process RGB + Depth"""
@@ -187,8 +216,6 @@ class RctaPerception:
     """Manager of a single independent channel"""
 
     def __init__(self):
-
-        # --- BLOCCO MODIFICATO ---
         if config.USE_SHARED_YOLO_INSTANCE:
             # Modalità 1: Un solo modello YOLO e un solo Lock condivisi
             print("PERCEPTION [Initializing with 1 Shared YOLO model]")
@@ -219,7 +246,7 @@ class RctaPerception:
                 'left': RctaCameraChannel('left', detector_left, lock_left),
                 'right': RctaCameraChannel('right', detector_right, lock_right)
             }
-        # --- FINE BLOCCO MODIFICATO ---
+
 
     # Wrapper callbacks
     def rear_rgb_callback(self, i):

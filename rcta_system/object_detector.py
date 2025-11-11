@@ -26,6 +26,19 @@ class ObjectDetector:
 
             print(f"OBJECT_DETECTOR [YOLOv8 nano model loaded. Target classes: {self.target_classes}]")
 
+            try:
+                print("OBJECT_DETECTOR [Warming up model...]")
+                # Crea un'immagine fittizia con le dimensioni corrette
+                dummy_img = np.zeros(
+                    (config.CAMERA_IMAGE_HEIGHT, config.CAMERA_IMAGE_WIDTH, 3),
+                    dtype=np.uint8
+                )
+                # Esegui un'inferenza fittizia
+                self.model.track(dummy_img, verbose=False, persist=False)
+                print("OBJECT_DETECTOR [Model is ready.]")
+            except Exception as e:
+                print(f"OBJECT_DETECTOR [Warning: Model warm-up failed: {e}]")
+
         except Exception as e:
             print(f"OBJECT_DETECTOR [Error: {e}]")
             self.model = None
@@ -55,7 +68,7 @@ class ObjectDetector:
 
         end_time = time.perf_counter()
         inference_time_ms = (end_time -start_time)*1000
-        print(f"DEBUG [ObjectDetector] Inference time: {inference_time_ms:.2f} ms")
+        #print(f"DEBUG [ObjectDetector] Inference time: {inference_time_ms:.2f} ms")
 
         detections = []
 
