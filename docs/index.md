@@ -5,18 +5,29 @@ title: SVS - Rear Cross Traffic Alert
 
 # **Rear Cross Traffic Alert**
 
+**M.S. Engineering and Computer Science**  
+**Alma Mater Studiorum – University of Bologna**  
+Campus of Cesena – Italy
+
+
 <a href="https://github.com/GiammaCode/SVS-RCTA" target="_blank">
   <button style="padding: 8px 16px; font-size: 16px; border: none; background-color: #24292e; color: white; border-radius: 6px; cursor: pointer;">
     ⭐ View on GitHub
   </button>
 </a>
 
-## **Smart Vehicular System**
-**M.S. Engineering and Computer Science**  
-**Alma Mater Studiorum – University of Bologna**  
-Campus of Cesena – Italy
-
 ---
+
+My proposed project about Smart Vehicular System exam is a Rear Cross Traffic Alert (RCTA) system that represents
+an implementation of a critical ADAS designed to enhance vehicle safety during reversing maneuvers. 
+This project demonstrates the integration of computer vision, sensor fusion, and real-time decision-making within
+the CARLA autonomous driving simulator.
+
+The system monitors the rear and side areas of a vehicle, detecting potential hazards such as:
+- Approaching vehicles
+- Pedestrians crossing behind the vehicle
+- Bicycles and motorcycles
+- Other moving obstacles
 
 
 ## **Index**

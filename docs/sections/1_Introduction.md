@@ -6,24 +6,8 @@ nav_order: 1
 
 # Chapter 1: Introduction
 
-## 1.1 The Project
-The following document represents the technical documentation about my Smart
-Vehicular System project.
+## 1.1 RCTA - Rear Cross Traffic Alert
 
-My proposed project is a Rear Cross Traffic Alert (RCTA) system that represents an implementation of a critical 
-ADAS designed to enhance vehicle safety during reversing maneuvers. 
-This project demonstrates the integration of computer vision, sensor fusion, and real-time decision-making within the 
-CARLA autonomous driving simulator.
-
-The system monitors the rear and side areas of a vehicle, detecting potential hazards such as:
-- Approaching vehicles
-- Pedestrians crossing behind the vehicle
-- Bicycles and motorcycles
-- Other moving obstacles
-
-By combining RGB cameras with depth sensors and applying state-of-the-art object detection algorithms, 
-the RCTA system provides timely warnings to drivers, potentially preventing collisions in scenarios 
-where visibility is limited.
 
 ---
 
