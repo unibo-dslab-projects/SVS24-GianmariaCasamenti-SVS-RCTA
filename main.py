@@ -19,6 +19,7 @@ from controller.keyboard_controller import KeyboardController
 
 def draw_fused_detections(image, perception_data):
     RED = (0, 0, 255)
+    YELLOW = (0,255,255)
     GREEN = (0, 255, 0)
 
     sector_ttc = perception_data['ttc']
@@ -30,7 +31,12 @@ def draw_fused_detections(image, perception_data):
         obj_ttc = det.get('ttc_obj', float('inf'))
         id = det.get('id')
 
-        color = GREEN if obj_ttc >= config.TTC_THRESHOLD and dist >= config.DIST_THRESHOLD else RED
+        if obj_ttc < config.TTC_THRESHOLD:
+            color = RED
+        elif dist < config.DIST_THRESHOLD:
+            color = YELLOW
+        else:
+            color = GREEN
 
         dist_str = f"{dist:.1f}m"
         ttc_str = f"{obj_ttc:.1f}s" if obj_ttc != float('inf') else "---"
@@ -39,9 +45,9 @@ def draw_fused_detections(image, perception_data):
         cv2.rectangle(image, (bbox[0], bbox[1]), (bbox[2], bbox[3]), color, 2)
         cv2.putText(image, label, (bbox[0], bbox[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
-    info_color = RED if (sector_ttc < config.TTC_THRESHOLD or sector_dist < 3.0) else GREEN
-    info_text = f"MIN DIST: {sector_dist:.1f}m | MIN TTC: {sector_ttc:.1f}s"
-    cv2.putText(image, info_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, info_color, 2)
+    #info_color = RED if (sector_ttc < config.TTC_THRESHOLD or sector_dist < 3.0) else GREEN
+    #info_text = f"MIN DIST: {sector_dist:.1f}m | MIN TTC: {sector_ttc:.1f}s"
+    #cv2.putText(image, info_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, info_color, 2)
 
 
 def main():

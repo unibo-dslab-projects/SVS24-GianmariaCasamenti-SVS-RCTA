@@ -39,7 +39,7 @@ radar_data = {
     'rear': {'state': 'SAFE', 'label': '', 'dist': float('inf'), 'ttc': float('inf')},
     'right': {'state': 'SAFE', 'label': '', 'dist': float('inf'), 'ttc': float('inf')}
 }
-flash_timer = 0
+
 
 
 def _on_connect(client, userdata, flags, reason_code, propertie):
@@ -157,7 +157,6 @@ def draw_labels(surface, center, sectors_config, font_class, font_data):
         surface.blit(surf_data, rect_data)
 
 def main():
-    global flash_timer
     global radar_data  # Assicurati che usi radar_data
 
     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
@@ -198,8 +197,7 @@ def main():
                 running = False
 
         screen.fill(BG_COLOR)
-        flash_timer += 1
-        flash_on = (flash_timer % 30) < 15
+
 
         sectors_config = {
             'left': {'start': 180, 'end': 240, **radar_data['left']},
@@ -215,7 +213,7 @@ def main():
             if state == 'WARNING':
                 color = COLOR_WARNING
             elif state == 'DANGER':
-                color = COLOR_DANGER if flash_on else (255, 0, 0, 50)
+                color = COLOR_DANGER
 
             draw_sector(screen, (cx, cy), data['start'], data['end'], 180, color)
 
@@ -226,7 +224,7 @@ def main():
         draw_labels(screen, (cx, cy), sectors_config, font_class, font_data)
 
         pygame.display.flip()
-        clock.tick(60)
+        clock.tick(config.TARGET_FPS)
 
     client.loop_stop()
     client.disconnect()
