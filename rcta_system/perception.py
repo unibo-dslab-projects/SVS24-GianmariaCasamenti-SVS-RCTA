@@ -91,33 +91,36 @@ class RctaPerception:
 
     def _fuse_results(self, detections, depth_map):
         h, w = depth_map.shape
-        min_scene_dist = float('inf')
         fused = []
 
         for det in detections:
+            # Estrae BBox
             x1, y1, x2, y2 = map(int, det['bbox'])
+            # CLIPPING (evita indici fuori bound)
             x1, x2 = max(0, x1), min(w, x2)
             y1, y2 = max(0, y1), min(h, y2)
 
             obj_dist = float('inf')
+            #studio regione di interesse
             if x1 < x2 and y1 < y2:
                 roi = depth_map[y1:y2, x1:x2]
+                #prendo il percentile perchè piu robusto a outlier
                 if roi.size > 0:
                     obj_dist = np.percentile(roi, 10)
 
             det['dist'] = obj_dist
             det['ttc_obj'] = float('inf')
             fused.append(det)
-            if obj_dist < min_scene_dist:
-                min_scene_dist = obj_dist
-        return fused, min_scene_dist
+        return fused
 
     def _update_tracks_and_calc_ttc(self, current_objects, current_time, tracker_dict):
         for obj in current_objects:
             track_id = obj['id']
             if track_id in tracker_dict:
                 prev_state = tracker_dict[track_id]
+                #tempo tra i due frame
                 delta_t = current_time - prev_state['time']
+                ##distanza tra i due frame
                 delta_d = prev_state['dist'] - obj['dist']
 
                 if delta_t > 0.0:
@@ -153,14 +156,19 @@ class RctaPerception:
 
         detections = self.detector_rear.detect(rgb_np)
 
-        fused_objects, min_dist = self._fuse_results(detections, depth_meters)
+        fused_objects = self._fuse_results(detections, depth_meters)
 
+        # CLEANUP: Rimuove oggetti che non vedi più da troppo tempo
         if timestamp - self.last_cleanup_time_rear > self.STALE_TRACK_THRESHOLD_SEC:
             self._cleanup_stale_tracks(timestamp, self.tracked_objects_rear)
             self.last_cleanup_time_rear = timestamp
+
+        #Aggiorna la storia di ogni oggetto e calcola TTC
         self._update_tracks_and_calc_ttc(fused_objects, timestamp, self.tracked_objects_rear)
 
-        min_sector_ttc = min((obj.get('ttc_obj', float('inf')) for obj in fused_objects), default=float('inf'))
+        # CALCOLA min qui da fused_objects
+        min_dist = min((obj['dist'] for obj in fused_objects), default=float('inf'))
+        min_sector_ttc = min((obj['ttc_obj'] for obj in fused_objects), default=float('inf'))
 
         self.display_frame_rear = rgb_np.copy()
         self.perception_data['rear'] = {
@@ -182,14 +190,15 @@ class RctaPerception:
 
         detections = self.detector_left.detect(rgb_np)
 
-        fused_objects, min_dist = self._fuse_results(detections, depth_meters)
+        fused_objects = self._fuse_results(detections, depth_meters)
 
         if timestamp - self.last_cleanup_time_left > self.STALE_TRACK_THRESHOLD_SEC:
             self._cleanup_stale_tracks(timestamp, self.tracked_objects_left)
             self.last_cleanup_time_left = timestamp
         self._update_tracks_and_calc_ttc(fused_objects, timestamp, self.tracked_objects_left)
 
-        min_sector_ttc = min((obj.get('ttc_obj', float('inf')) for obj in fused_objects), default=float('inf'))
+        min_dist = min((obj['dist'] for obj in fused_objects), default=float('inf'))
+        min_sector_ttc = min((obj['ttc_obj'] for obj in fused_objects), default=float('inf'))
 
         self.display_frame_left = rgb_np.copy()
         self.perception_data['left'] = {
@@ -211,14 +220,15 @@ class RctaPerception:
 
         detections = self.detector_right.detect(rgb_np)
 
-        fused_objects, min_dist = self._fuse_results(detections, depth_meters)
+        fused_objects = self._fuse_results(detections, depth_meters)
 
         if timestamp - self.last_cleanup_time_right > self.STALE_TRACK_THRESHOLD_SEC:
             self._cleanup_stale_tracks(timestamp, self.tracked_objects_right)
             self.last_cleanup_time_right = timestamp
         self._update_tracks_and_calc_ttc(fused_objects, timestamp, self.tracked_objects_right)
 
-        min_sector_ttc = min((obj.get('ttc_obj', float('inf')) for obj in fused_objects), default=float('inf'))
+        min_dist = min((obj['dist'] for obj in fused_objects), default=float('inf'))
+        min_sector_ttc = min((obj['ttc_obj'] for obj in fused_objects), default=float('inf'))
 
         self.display_frame_right = rgb_np.copy()
         self.perception_data['right'] = {
