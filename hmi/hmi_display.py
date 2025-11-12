@@ -16,8 +16,8 @@ except ImportError:
     sys.exit(1)
 
 # --- COSTANTI GRAFICHE ---
-SCREEN_WIDTH = 500
-SCREEN_HEIGHT = 600
+SCREEN_WIDTH = 420
+SCREEN_HEIGHT = 420
 BG_COLOR = (30, 30, 30)  # grigio
 CAR_COLOR = (100, 100, 255)  # blue
 
@@ -104,61 +104,50 @@ def _on_message(client, userdata, msg):
 
 
 def draw_sector(surface, center, start_angle, end_angle, radius, color):
-    """
-    Disegna un settore circolare (approssimato con un poligono) per il radar.
-    """
+    """Disegna un settore circolare."""
     points = [center]
-    steps = 20  # Precisione dell'arco
+    steps = 30
     for i in range(steps + 1):
         angle = math.radians(start_angle + (end_angle - start_angle) * i / steps)
         x = center[0] + radius * math.cos(angle)
-        y = center[1] - radius * math.sin(angle)  # Y invertita in Pygame
+        y = center[1] - radius * math.sin(angle)
         points.append((x, y))
 
     sector_surf = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
     pygame.draw.polygon(sector_surf, color, points)
     surface.blit(sector_surf, (0, 0))
 
-
-# --- NUOVA FUNZIONE PER DISEGNARE ETICHETTE ---
 def draw_labels(surface, center, sectors_config, font_class, font_data):
-    """
-    Disegna le etichette (classe, dist, ttc) sui settori.
-    """
+    """Disegna le etichette sui settori."""
     for side, data in sectors_config.items():
         if data['state'] == 'SAFE':
-            continue  # Non disegnare nulla se sicuro
+            continue
 
-        # Calcola posizione centrale del testo
+        # Posizione del testo
         mid_angle_rad = math.radians((data['start'] + data['end']) / 2)
-        text_radius = 180  # Distanza dal centro
+        text_radius = 130
 
         x = center[0] + text_radius * math.cos(mid_angle_rad)
         y = center[1] - text_radius * math.sin(mid_angle_rad)
 
-        # Prepara le stringhe
+        # Prepara stringhe
         label_str = data['label']
         dist_str = f"{data['dist']:.1f}m" if data['dist'] != float('inf') else ""
         ttc_str = f"{data['ttc']:.1f}s" if data['ttc'] != float('inf') else ""
 
-        # Stringa dati combinata
         data_str = f"{dist_str} | {ttc_str}" if dist_str and ttc_str else (dist_str or ttc_str)
 
-        # Renderizza i testi
+        # Renderizza testi
         surf_class = font_class.render(label_str, True, TEXT_COLOR)
-
-        # Colora i dati di rosso chiaro se è DANGER
         data_color = TEXT_DANGER_COLOR if data['state'] == 'DANGER' else TEXT_COLOR
         surf_data = font_data.render(data_str, True, data_color)
 
-        # Calcola il layout verticale (classe in alto, dati sotto)
+        # Layout
         rect_class = surf_class.get_rect(center=(x, y - 12))
         rect_data = surf_data.get_rect(center=(x, y + 12))
 
-        # Creiamo un rettangolo di sfondo unico
-        bg_rect = rect_class.union(rect_data).inflate(10, 8)
-
-        # Disegna sfondo
+        # Sfondo
+        bg_rect = rect_class.union(rect_data).inflate(12, 10)
         s = pygame.Surface(bg_rect.size, pygame.SRCALPHA)
         s.fill(TEXT_BG_COLOR)
         surface.blit(s, bg_rect.topleft)
@@ -166,7 +155,6 @@ def draw_labels(surface, center, sectors_config, font_class, font_data):
         # Disegna testi
         surface.blit(surf_class, rect_class)
         surface.blit(surf_data, rect_data)
-
 
 def main():
     global flash_timer
@@ -185,8 +173,8 @@ def main():
     # --- Setup Pygame e FONT ---
     pygame.init()
     pygame.font.init()  # Inizializza il modulo font
-    font_class = pygame.font.SysFont('Arial', 24, bold=True)
-    font_data = pygame.font.SysFont('Arial', 18)
+    font_class = pygame.font.SysFont('Arial', 20, bold=True)
+    font_data = pygame.font.SysFont('Arial', 15)
 
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption("RCTA HMI")
@@ -200,7 +188,8 @@ def main():
         except:
             print("HMI_GRAPHICS [Warning: Could not load car image]")
 
-    cx, cy = SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2
+    cx = SCREEN_WIDTH // 2
+    cy = SCREEN_HEIGHT // 2 + 20
 
     running = True
     while running:
@@ -212,11 +201,10 @@ def main():
         flash_timer += 1
         flash_on = (flash_timer % 30) < 15
 
-        # --- MODIFICA: Leggi da radar_data ---
         sectors_config = {
-            'rear': {'start': 250, 'end': 290, **radar_data['rear']},
-            'right': {'start': 290, 'end': 350, **radar_data['right']},
-            'left': {'start': 190, 'end': 250, **radar_data['left']}
+            'left': {'start': 180, 'end': 240, **radar_data['left']},
+            'rear': {'start': 240, 'end': 300, **radar_data['rear']},
+            'right': {'start': 300, 'end': 360, **radar_data['right']}
         }
 
         # --- Disegno Settori ---
@@ -229,20 +217,13 @@ def main():
             elif state == 'DANGER':
                 color = COLOR_DANGER if flash_on else (255, 0, 0, 50)
 
-            draw_sector(screen, (cx, cy + 40), data['start'], data['end'], 250, color)
+            draw_sector(screen, (cx, cy), data['start'], data['end'], 180, color)
 
-        # --- Disegno Veicolo Ego ---
-        if car_img:
-            img_rect = car_img.get_rect(center=(cx, cy))
-            screen.blit(car_img, img_rect)
-        else:
-            # Fallback
-            pygame.draw.rect(screen, CAR_COLOR, (cx - 30, cy - 60, 60, 120), border_radius=10)
-            pygame.draw.polygon(screen, (80, 80, 255), [(cx - 30, cy - 60), (cx + 30, cy - 60), (cx, cy - 90)])
+        #
+        img_rect = car_img.get_rect(center=(cx, cy-60))
+        screen.blit(car_img, img_rect)
 
-        # --- NUOVA CHIAMATA: Disegna Etichette ---
-        # Disegnato dopo l'auto, così il testo è sopra tutto
-        draw_labels(screen, (cx, cy + 40), sectors_config, font_class, font_data)
+        draw_labels(screen, (cx, cy), sectors_config, font_class, font_data)
 
         pygame.display.flip()
         clock.tick(60)

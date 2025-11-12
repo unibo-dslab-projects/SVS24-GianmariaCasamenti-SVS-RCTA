@@ -9,58 +9,54 @@ class DecisionMaker:
         self.dist_threshold = config.DIST_THRESHOLD
 
     def evaluate(self, perception_data_all_channels, is_reversing):
-        dangerous_objects_list = []
         if not is_reversing:
             return []
 
+        dangerous_objects_list = []
+
         for side, data in perception_data_all_channels.items():
-            has_danger_alert_for_side = False
-
+            # Se TTC pericoloso → DANGER
             if data['ttc'] < self.ttc_threshold:
-                dangerous_obj = None
-                for obj in data['objects']:
-                    if abs(obj.get('ttc_obj', float('inf')) - data['ttc']) < 0.01:
-                        dangerous_obj = obj
-                        break
-
-                if dangerous_obj is None:
-                    for obj in data['objects']:
-                        if obj.get('ttc_obj', float('inf')) < self.ttc_threshold:
-                            dangerous_obj = obj
-                            break
+                # Trova l'oggetto con il TTC minimo
+                dangerous_obj = min(
+                    data['objects'],
+                    key=lambda obj: obj.get('ttc_obj', float('inf')),
+                    default=None
+                )
 
                 if dangerous_obj:
-                    obj_class = dangerous_obj['class']
-                    obj_dist = dangerous_obj['dist']
+                    dangerous_objects_list.append({
+                        "zone": side,
+                        "alert_level": "danger",
+                        "class": dangerous_obj['class'],
+                        "distance": dangerous_obj['dist'],
+                        "ttc": dangerous_obj['ttc_obj']
+                    })
                 else:
-                    obj_class = "FAST"
-                    obj_dist = data.get('dist', float('inf'))
+                    # Fallback: oggetto veloce non tracciato
+                    dangerous_objects_list.append({
+                        "zone": side,
+                        "alert_level": "danger",
+                        "class": "FAST",
+                        "distance": data['dist'],
+                        "ttc": data['ttc']
+                    })
+                continue  # Skip warning check per questa zona
 
-                dangerous_objects_list.append({
-                    "zone": side,
-                    "alert_level": "danger",
-                    "class": obj_class,
-                    "distance": obj_dist,
-                    "ttc": data['ttc']
-                })
-                has_danger_alert_for_side = True
+            # Se nessun TTC pericoloso ma oggetto vicino → WARNING
+            if data['dist'] < self.dist_threshold:
+                closest_obj = min(
+                    data['objects'],
+                    key=lambda obj: obj.get('dist', float('inf')),
+                    default=None
+                )
 
-            if not has_danger_alert_for_side:
-                closest_obj_in_zone = None
-                min_dist_for_warning = self.dist_threshold
-
-                for obj in data['objects']:
-                    obj_dist = obj.get('dist', float('inf'))
-                    if obj_dist < min_dist_for_warning:
-                        min_dist_for_warning = obj_dist
-                        closest_obj_in_zone = obj
-
-                if closest_obj_in_zone:
+                if closest_obj:
                     dangerous_objects_list.append({
                         "zone": side,
                         "alert_level": "warning",
-                        "class": closest_obj_in_zone['class'],
-                        "distance": min_dist_for_warning,
+                        "class": closest_obj['class'],
+                        "distance": closest_obj['dist'],
                         "ttc": float('inf')
                     })
 
