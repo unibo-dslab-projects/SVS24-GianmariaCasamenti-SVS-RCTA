@@ -34,38 +34,35 @@ class ObjectDetector:
             print(f"OBJECT_DETECTOR [Error: {e}]")
             self.model = None
 
-    def detect(self, bgr_image):
+    def detect(self, rgb_image):
         if self.model is None:
             return []
-
-        rgb_image = bgr_image[:, :, ::-1]
 
         results = self.model.track(
             rgb_image,
             verbose=False,
             classes=self.target_class_indices,
             conf=0.5,
-            persist=True
+            persist=True,
+            half = True  # Usa FP16 se hai GPU compatibile (velocizza ~2x)
         )
 
-        detections = []
-
-        if results[0].boxes.id is None:
+        if not results or results[0].boxes.id is None:
             return []
 
-        for box in results[0].boxes.cpu().numpy():
+        #vectorizzazione
+        boxes = results[0].boxes.cpu().numpy()
+        detections = []
+
+        for box in boxes:
             if box.id is None:
                 continue
 
-            track_id = int(box.id[0])
-            bbox = [int(coord) for coord in box.xyxy[0]]
-            conf = float(box.conf[0])
-            class_id = int(box.cls[0])
-            class_name = self.class_names[class_id]
             detections.append({
-                'id': track_id,
-                'class': class_name,
-                'confidence': conf,
-                'bbox': bbox
+                'id': int(box.id[0]),
+                'class': self.class_names[int(box.cls[0])],
+                'confidence': float(box.conf[0]),
+                'bbox': box.xyxy[0].astype(int).tolist()
             })
+
         return detections

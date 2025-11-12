@@ -30,7 +30,7 @@ TEXT_COLOR = (255, 255, 255)
 TEXT_DANGER_COLOR = (255, 180, 180)  # Rosso chiaro per TTC
 TEXT_BG_COLOR = (0, 0, 0, 160)  # Sfondo semi-trasparente per leggibilità
 
-CAR_ICON_PATH = os.path.join(project_root, "docs", "car-top.png")
+CAR_ICON_PATH = os.path.join(project_root, "hmi", "car-top.png")
 
 # --- MODIFICA STATO GLOBALE ---
 # Ora memorizziamo lo stato completo per ogni settore

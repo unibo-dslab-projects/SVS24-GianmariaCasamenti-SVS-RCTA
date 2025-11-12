@@ -28,21 +28,18 @@ class RctaPerception:
     def __init__(self):
         print("PERCEPTION [Initializing with 3 Independent YOLO models]")
         self.detector_rear = ObjectDetector()
-        self.lock_rear = threading.Lock()
-        self.detector_left = ObjectDetector()
-        self.lock_left = threading.Lock()
-        self.detector_right = ObjectDetector()
-        self.lock_right = threading.Lock()
-
         self.latest_rear_rgb = None
         self.latest_rear_depth = None
+        self.display_frame_rear = None
+
+        self.detector_left = ObjectDetector()
         self.latest_left_rgb = None
         self.latest_left_depth = None
+        self.display_frame_left = None
+
+        self.detector_right = ObjectDetector()
         self.latest_right_rgb = None
         self.latest_right_depth = None
-
-        self.display_frame_rear = None
-        self.display_frame_left = None
         self.display_frame_right = None
 
         default_data = {'dist': float('inf'), 'ttc': float('inf'), 'objects': []}
@@ -62,6 +59,7 @@ class RctaPerception:
 
         self.STALE_TRACK_THRESHOLD_SEC = 1.0
         self.MIN_VELOCITY_FOR_TTC_MPS = 0.5
+
 
     def rear_rgb_callback(self, img):
         self.latest_rear_rgb = img
@@ -153,8 +151,7 @@ class RctaPerception:
         depth_meters = self._to_depth_meters(depth_carla)
         timestamp = depth_carla.timestamp
 
-        with self.lock_rear:
-            detections = self.detector_rear.detect(rgb_np)
+        detections = self.detector_rear.detect(rgb_np)
 
         fused_objects, min_dist = self._fuse_results(detections, depth_meters)
 
@@ -183,8 +180,7 @@ class RctaPerception:
         depth_meters = self._to_depth_meters(depth_carla)
         timestamp = depth_carla.timestamp
 
-        with self.lock_left:
-            detections = self.detector_left.detect(rgb_np)
+        detections = self.detector_left.detect(rgb_np)
 
         fused_objects, min_dist = self._fuse_results(detections, depth_meters)
 
@@ -213,8 +209,7 @@ class RctaPerception:
         depth_meters = self._to_depth_meters(depth_carla)
         timestamp = depth_carla.timestamp
 
-        with self.lock_right:
-            detections = self.detector_right.detect(rgb_np)
+        detections = self.detector_right.detect(rgb_np)
 
         fused_objects, min_dist = self._fuse_results(detections, depth_meters)
 
@@ -232,10 +227,12 @@ class RctaPerception:
             'objects': fused_objects
         }
 
-    def process_all_cameras(self):
+    def get_all_perception_data(self, is_reversing):
+        if not is_reversing:
+            return self.perception_data
+
         self.process_rear_camera()
         self.process_left_camera()
         self.process_right_camera()
 
-    def get_all_perception_data(self):
         return self.perception_data

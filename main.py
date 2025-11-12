@@ -87,9 +87,6 @@ def main():
 
             time.sleep(1.0)
             running = True
-
-            print("MAIN [Starting main loop with clock tick]")
-
             while running:
                 manager.world.tick()
 
@@ -105,20 +102,16 @@ def main():
                         running = False
 
                 keys = pygame.key.get_pressed()
-                if keys[pygame.K_q]:
-                    running = False
-
                 control = controller.parse_input(keys)
                 ego_vehicle.apply_control(control)
 
-                perception_system.process_all_cameras()
+                is_reversing = control.reverse
 
-                all_perception_data = perception_system.get_all_perception_data()
-                is_reversing = control.reverse or config.DEBUG
+                all_perception_data = perception_system.get_all_perception_data(True)
                 dangerous_objects = decision_maker.evaluate(all_perception_data, is_reversing)
                 mqtt_publisher.publish_status(dangerous_objects)
 
-                if not config.DEBUG:
+                if config.DEBUG:
                     if perception_system.display_frame_rear is not None:
                         frame = perception_system.display_frame_rear
                         data = perception_system.perception_data['rear']
