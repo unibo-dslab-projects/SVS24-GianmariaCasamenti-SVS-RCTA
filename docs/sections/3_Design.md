@@ -8,7 +8,14 @@ nav_order: 3
 
 ## Sensor used
 
+- RGB CAMERA
+- DEPTH CAMERA
+- RGBD
+
 ## Cameras positioning
+
+BLIND SPOT CAMERA
+REAR CAMERA
 
 ## Camera views
 

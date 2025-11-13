@@ -18,17 +18,10 @@ Campus of Cesena – Italy
 
 ---
 
-My proposed project about Smart Vehicular System exam is a Rear Cross Traffic Alert (RCTA) system that represents
+My project about Smart Vehicular System exam is a RCTA system that represents
 an implementation of a critical ADAS designed to enhance vehicle safety during reversing maneuvers. 
 This project demonstrates the integration of computer vision, sensor fusion, and real-time decision-making within
 the CARLA autonomous driving simulator.
-
-The system monitors the rear and side areas of a vehicle, detecting potential hazards such as:
-- Approaching vehicles
-- Pedestrians crossing behind the vehicle
-- Bicycles and motorcycles
-- Other moving obstacles
-
 
 ## **Index**
 

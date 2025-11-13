@@ -8,40 +8,40 @@ nav_order: 1
 
 ## 1.1 RCTA - Rear Cross Traffic Alert
 
+Rear Cross Traffic Alert (RCTA) is an Advanced Driver Assistance System (ADAS) designed to enhance vehicle safety 
+during reverse maneuvers, particularly when backing out of parking spaces. 
+
+Unlike traditional parking sensors that detect stationary obstacles directly behind the vehicle, RCTA is specifically
+engineered to identify and alert drivers to moving cross traffic approaching from the sides while the vehicle is 
+in reverse.
+
+The RCTA system utilizes sensors positioned at the rear side of the vehicle to obtain environmental data and monitor 
+the areas perpendicular to the vehicle's backing path. 
+
+This lateral monitoring capability distinguishes RCTA from conventional rear parking sensors, as it focuses on 
+detecting vehicles, pedestrians, or cyclists that are traveling across the vehicle's projected reverse path, rather
+than objects directly in the backing trajectory.
+
+When the system detects moving objects in the blind zones on either side of the vehicle, it calculates their distance 
+and relative speed to assess the collision risk. 
+
+If a potential collision is deemed likely to occur, the RCTA system will promptly and effectively warn the driver of 
+the impending danger through acoustic alerts, optical signals (typically displayed in the side mirrors or on 
+the dashboard), haptic warnings (such as seat or steering wheel vibrations), or a combination of these 
+notification methods.
+
+![image](../img/intro-rcta.png)
 
 ---
 
 ## 1.2 Motivations
 
-The development of this RCTA system was driven by several factors:
+The motivation for developing and standardizing RCTA systems stems from global traffic safety concerns. 
+Although the overall number of traffic accidents is rising, specifically, about 2.3% of accidents occur during 
+reversing or while maneuvering in a parking space. 
 
-### 1.2.1 Real-World Safety Concerns
+Distracted driving is also identified as a major factor contributing to traffic accidents. 
+The utility of the RCTA system lies in its ability to mitigate these risks by promptly and effectively alerting 
+drivers to impending danger, thus effectively keeping them away from the danger of rearward collision. 
 
-Reversing accidents represent a significant portion of vehicle collisions, particularly in parking lots and 
-residential areas. According to traffic safety statistics:
-
-- **Backing accidents** account for approximately 25% of all vehicle collisions in parking lots
-- **Pedestrian injuries** from reversing vehicles are particularly common, with children and elderly individuals at highest risk
-- **Limited visibility** during reversing maneuvers creates blind spots that traditional mirrors cannot fully cover
-
-### 1.2.2 Technological Advancement
-
-Modern vehicles increasingly incorporate ADAS features to compensate for human limitations:
-
-- **Sensor technology** has become more affordable and reliable
-- **Computer vision algorithms** have achieved real-time performance
-- **Legislative requirements** in many regions now mandate reversing cameras and warning systems
-
----
-
-## 1.3 System Scope
-
-This RCTA implementation focuses on:
-
-1. **Detection zone coverage**: Monitoring a 180-degree area behind the vehicle, with extended coverage to the sides
-2. **Multi-object tracking**: Simultaneously tracking multiple potential hazards
-3. **Distance and velocity estimation**: Calculating time-to-collision for risk assessment
-4. **Alert generation**: Providing graduated warnings based on threat level
-5. **Simulation validation**: Testing in diverse CARLA scenarios
-
----
+___
