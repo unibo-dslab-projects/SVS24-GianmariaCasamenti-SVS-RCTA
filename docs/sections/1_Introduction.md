@@ -4,9 +4,9 @@ title: Introduction
 nav_order: 1
 ---
 
-# Chapter 1: Introduction
+# Introduction
 
-## 1.1 RCTA - Rear Cross Traffic Alert
+## RCTA - Rear Cross Traffic Alert
 
 Rear Cross Traffic Alert (RCTA) is an Advanced Driver Assistance System (ADAS) designed to enhance vehicle safety 
 during reverse maneuvers, particularly when backing out of parking spaces. 
@@ -34,7 +34,7 @@ notification methods.
 
 ---
 
-## 1.2 Motivations
+## Motivations
 
 The development of a Rear Cross-Traffic Alert (RCTA) system is directly justified by the high statistical
 frequency of low-speed reversing incidents. 
