@@ -55,7 +55,9 @@ during reversing maneuvers.
 
 ## Implementation requirements
 1) **Technology**: 
+
     - Python 3.7, CARLA, YOLOv8, MQTT to develop
+   
     - Github, GitHub Pages to manage project
    
 2) **Testing**: Implement different test scenarios with vehicles, pedestrians, 
