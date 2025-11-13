@@ -8,11 +8,6 @@ nav_order: 3
 
 ## Sensor used
 
-The RCTA system utilizes the following sensors:
-
-- **RGB Camera**: Provides color image data for object detection
-- **Depth Camera**: Provides distance information for each pixel
-- **RGB-D Fusion**: Combines RGB and depth data for accurate distance estimation
 
 ## Cameras positioning
 
@@ -20,23 +15,18 @@ The RCTA system utilizes the following sensors:
   <div class="carousel">
     <div class="carousel-slide active">
       <img src="../img/position1.png" alt="Camera mounting position">
-      <p class="carousel-caption">Figure 1: Camera mounting position</p>
     </div>
     <div class="carousel-slide">
       <img src="../img/position2.png" alt="Field of view coverage">
-      <p class="carousel-caption">Figure 2: Field of view coverage</p>
     </div>
     <div class="carousel-slide">
       <img src="../img/position3.png" alt="Detection zones">
-      <p class="carousel-caption">Figure 3: Three detection zones</p>
     </div>
     <div class="carousel-slide">
       <img src="../img/position4.png" alt="Sensor configuration">
-      <p class="carousel-caption">Figure 4: Sensor configuration</p>
     </div>
     <div class="carousel-slide">
       <img src="../img/position5.png" alt="Coverage diagram">
-      <p class="carousel-caption">Figure 5: Coverage diagram</p>
     </div>
   </div>
   
@@ -174,28 +164,8 @@ function currentSlide(index) {
   showSlide(currentIndex);
 }
 
-// Auto-advance ogni 5 secondi (opzionale)
-// setInterval(() => moveSlide(1), 5000);
 </script>
 
-### Camera Configuration Details
-
-The system uses three RGB-D camera pairs positioned at the rear of the vehicle:
-
-**Rear Camera**
-- Location: 2.0m behind vehicle center, 0.9m height
-- Orientation: 180° (facing backward)
-- FOV: 60° (covers 150° to 210°)
-
-**Left Blind Spot Camera**
-- Location: Same physical position
-- Orientation: 240° (60° offset left)
-- FOV: 60° (covers 210° to 270°)
-
-**Right Blind Spot Camera**
-- Location: Same physical position
-- Orientation: 120° (60° offset right)
-- FOV: 60° (covers 90° to 150°)
 
 ## Camera views
 
@@ -206,11 +176,6 @@ Each camera provides:
 
 ## Sensors purpose
 
-| Sensor | Purpose |
-|--------|---------|
-| RGB Camera | Object detection and classification using YOLOv8 |
-| Depth Camera | Distance measurement for detected objects |
-| RGB-D Fusion | Accurate 3D localization and TTC calculation |
 
 ## Computer vision algorithm for detection
 
