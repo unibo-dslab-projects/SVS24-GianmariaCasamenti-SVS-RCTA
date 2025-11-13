@@ -36,12 +36,18 @@ notification methods.
 
 ## 1.2 Motivations
 
-The motivation for developing and standardizing RCTA systems stems from global traffic safety concerns. 
-Although the overall number of traffic accidents is rising, specifically, about 2.3% of accidents occur during 
-reversing or while maneuvering in a parking space. 
+The development of a Rear Cross-Traffic Alert (RCTA) system is directly justified by the high statistical
+frequency of low-speed reversing incidents. 
 
-Distracted driving is also identified as a major factor contributing to traffic accidents. 
-The utility of the RCTA system lies in its ability to mitigate these risks by promptly and effectively alerting 
-drivers to impending danger, thus effectively keeping them away from the danger of rearward collision. 
+Parking lot collisions are a significant issue, with the **National Safety Council (NSC)** reporting that 20% (1 in 5) 
+of all vehicle accidents occur in parking lots. 
+
+The specific risk of reversing is even more pronounced; a key study by the Allianz Center for Technology (AZT) 
+and Continental AG found that over 70% of parking-related incidents happen in reverse.
+
+Furthermore, the Insurance Institute for Highway Safety (IIHS) 
+found that a combination of rear-view cameras, sensors, and rear automatic braking (which incorporates RCTA logic) 
+reduces backing crash incidents by 78%.
 
 ___
+
