@@ -43,6 +43,7 @@ BLOCKING_VEHICLE_TRANSFORMS = [
         carla.Rotation(yaw=0)
     )
 ]
+#scenario1
 TARGET_VEHICLE_MODEL = 'vehicle.tesla.model3'
 TARGET_SPAWN_TRANSFORM = carla.Transform(
     carla.Location(x=-35.0, y=-15.0, z=0.5),
