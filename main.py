@@ -7,10 +7,13 @@ import config
 from carla_bridge.carla_manager import CarlaManager
 from carla_bridge.spawner import Spawner
 from carla_bridge.sensor_manager import SensorManager
-from scenarios.parking_lot_scenario import (setup_complex_scenario,
-                                            setup_parking_scenario_with_pedestrian,
-                                            setup_parking_scenario,
-                                            setup_vehicle_crossing_scenario)
+from scenarios.parking_lot_scenario import (
+    setup_scenario_vehicle_20kmh,
+    setup_scenario_bicycle,
+    setup_scenario_pedestrian_adult,
+    setup_scenario_pedestrian_child,
+    setup_scenario_complex_multi_target
+)
 from rcta_system.perception import RctaPerception
 from rcta_system.decision_making import DecisionMaker
 from hmi.mqtt_publisher import MqttPublisher
@@ -61,10 +64,18 @@ def main():
     try:
         with CarlaManager() as manager:
             print("MAIN [Initializing scenario]")
-            spawner = Spawner(manager.world, manager.actor_list)
-            #ego_vehicle = setup_parking_scenario_with_pedestrian(manager.world, spawner)
-            ego_vehicle = setup_complex_scenario(manager.world, spawner)
-            #ego_vehicle = setup_vehicle_crossing_scenario(manager.world, spawner)
+            world = manager.world
+            spawner = Spawner(world, manager.actor_list)
+            # SCENARIO 1: Vehicle 20 km/h da sinistra,
+            #ego_vehicle = setup_scenario_vehicle_20kmh(world, spawner, blocking_cars=True, bad_weather=False)
+            # SCENARIO 2: Bicycle 15 km/h da destra,
+            ego_vehicle = setup_scenario_bicycle(world, spawner, speed_kmh=15, blocking_cars=True, bad_weather=False)
+            # SCENARIO 3: Pedone adulto da sinistra
+            #ego_vehicle = setup_scenario_pedestrian_adult(world, spawner, blocking_cars=True, bad_weather=False)
+            # SCENARIO 4: Bambino 10 km/h da destra
+            #ego_vehicle = setup_scenario_pedestrian_child(world, spawner, speed_kmh=10, blocking_cars=True, bad_weather=False)
+            # SCENARIO 5: Multi-target complesso
+            #ego_vehicle = setup_scenario_complex_multi_target(world, spawner, blocking_cars=True, bad_weather=False)
 
             print("MAIN [Initializing perception and Sensor manager]")
             perception_system = RctaPerception()
