@@ -20,23 +20,18 @@ The RCTA system utilizes the following sensors:
   <div class="carousel">
     <div class="carousel-slide active">
       <img src="../img/position1.png" alt="Camera mounting position">
-      <p class="carousel-caption">Figure 1: Camera mounting position</p>
     </div>
     <div class="carousel-slide">
       <img src="../img/position2.png" alt="Field of view coverage">
-      <p class="carousel-caption">Figure 2: Field of view coverage</p>
     </div>
     <div class="carousel-slide">
       <img src="../img/position3.png" alt="Detection zones">
-      <p class="carousel-caption">Figure 3: Three detection zones</p>
     </div>
     <div class="carousel-slide">
       <img src="../img/position4.png" alt="Sensor configuration">
-      <p class="carousel-caption">Figure 4: Sensor configuration</p>
     </div>
     <div class="carousel-slide">
       <img src="../img/position5.png" alt="Coverage diagram">
-      <p class="carousel-caption">Figure 5: Coverage diagram</p>
     </div>
   </div>
   
@@ -175,7 +170,7 @@ function currentSlide(index) {
 }
 
 // Auto-advance ogni 5 secondi (opzionale)
-// setInterval(() => moveSlide(1), 5000);
+setInterval(() => moveSlide(1), 5000);
 </script>
 
 ### Camera Configuration Details

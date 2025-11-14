@@ -64,7 +64,7 @@ def main():
             spawner = Spawner(manager.world, manager.actor_list)
             #ego_vehicle = scenario_vehicle(manager.world,spawner, True, False)
             #ego_vehicle = scenario_bicycle(manager.world,spawner, True, False)
-            ego_vehicle = scenario_pedestrian_adult(manager.world,spawner, True, False)
+            ego_vehicle = scenario_pedestrian_adult(manager.world,spawner, False, False)
             #ego_vehicle = scenario_pedestrian_child(manager.world,spawner, True, False)
 
 
