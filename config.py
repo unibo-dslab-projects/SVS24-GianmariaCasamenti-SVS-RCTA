@@ -27,6 +27,8 @@ BLOCKING_VEHICLE_MODELS = [
     'vehicle.ford.mustang',
     'vehicle.chevrolet.impala'
 ]
+
+#scenario 1
 BLOCKING_VEHICLE_TRANSFORMS = [
     carla.Transform(
         carla.Location(x=-30.0, y=-27.0, z=0.5),
@@ -41,51 +43,33 @@ BLOCKING_VEHICLE_TRANSFORMS = [
         carla.Rotation(yaw=0)
     )
 ]
-
-# SCENARIO 1: VEHICLE CROSSING (20 km/h)
 TARGET_VEHICLE_MODEL = 'vehicle.tesla.model3'
-TARGET_SPAWN_TRANSFORM_VEHICLE = carla.Transform(
-    carla.Location(x=-37.0, y=-40.0, z=0.5),
+TARGET_SPAWN_TRANSFORM = carla.Transform(
+    carla.Location(x=-35.0, y=-15.0, z=0.5),
     carla.Rotation(yaw=270)
 )
-TARGET_VELOCITY_20 = carla.Vector3D(x=0, y=5.56, z=0)  # 20 km/h = 5.56 m/s
+TARGET_VELOCITY= carla.Vector3D(x=0, y=-5.56, z=0)  # 20 km/h = 5.56 m/s
 
-
-# SCENARIO 2: BICYCLE CROSSING (10 e 15 km/h)
+#scenario2
 BICYCLE_MODEL = 'vehicle.diamondback.century'
+# Spawn da SINISTRA
 BICYCLE_SPAWN_TRANSFORM = carla.Transform(
-    carla.Location(x=-37.0, y=-40.0, z=0.5),
+    carla.Location(x=-35.0, y=-15.0, z=0.5),
     carla.Rotation(yaw=270)
 )
-BICYCLE_VELOCITY_10 = carla.Vector3D(x=0, y=2.78, z=0)  # 10 km/h = 2.78 m/s
-BICYCLE_VELOCITY_15 = carla.Vector3D(x=0, y=4.17, z=0)  # 15 km/h = 4.17 m/s
+BICYCLE_VELOCITY= carla.Vector3D(x=0, y=-2.78, z=0)  # 10 km/h = 2.78 m/s
 
-
-# SCENARIO 3: PEDESTRIAN ADULT (5 km/h)
-PEDESTRIAN_ADULT_MODEL = 'walker.pedestrian.0002'
-PEDESTRIAN_ADULT_SPEED = 1.39  # 5 km/h = 1.39 m/s
-
-# Pedone attraversa da DESTRA verso SINISTRA
-PEDESTRIAN_ADULT_SPAWN_TRANSFORM = carla.Transform(
-    carla.Location(x=-35.0, y=-35.0, z=0.5),
-    carla.Rotation(yaw=90)
+#scenario 3 and 4
+PEDESTRIAN_MODEL = 'walker.pedestrian.0038'
+PEDESTRIAN_CHILD_MODEL = 'walker.pedestrian.0048'
+PEDESTRIAN_SPAWN_TRANSFORM = carla.Transform(
+    carla.Location(x=-33, y=-25.0, z=0.5),
+    carla.Rotation(yaw =270)
 )
-PEDESTRIAN_ADULT_DESTINATION = carla.Location(x=-33.0, y=-20.0, z=0.5)
 
-
-# SCENARIO 4: PEDESTRIAN CHILD (5 e 10 km/h)
-PEDESTRIAN_CHILD_MODEL = 'walker.pedestrian.0026'  # Modello bambino
-PEDESTRIAN_CHILD_SPEED_5 = 1.39   # 5 km/h = 1.39 m/s
-PEDESTRIAN_CHILD_SPEED_10 = 2.78  # 10 km/h = 2.78 m/s
-
-# Bambino attraversa da DESTRA verso SINISTRA
-PEDESTRIAN_CHILD_SPAWN_TRANSFORM = carla.Transform(
-    carla.Location(x=-35.0, y=-35.0, z=0.5),
-    carla.Rotation(yaw=-90)  # Verso sinistra
-)
-PEDESTRIAN_CHILD_DESTINATION = carla.Location(x=-33.0, y=-20.0, z=0.5)
-
-
+PEDESTRIAN_DESTINATION = carla.Location(x=-31.5, y=-37.0, z=0.5)
+PEDESTRIAN_WALK_SPEED = 1.39  # 5 km/h = 1.39 m/s
+PEDESTRIAN_CHILD_WALK_SPEED = 2.0  # 7 km/h
 
 #_____________________________________CAMERAS SETTING________________________
 CAMERA_IMAGE_WIDTH = 416 #640
