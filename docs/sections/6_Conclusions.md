@@ -6,34 +6,30 @@ nav_order: 8
 
 # Conclusions
 
-## Testing
+## Bilancio del Progetto (Punti di Forza e Debolezza)
 
-Ogni scenario deve richiedere BlockingCar=True/False e BadWether=Ture/False
+Punti di Forza: Design modulare (Perception/Decision/HMI), utilizzo di sensori avanzati (RGBD), stima del TTC 
+(più efficace della sola distanza), HMI chiara e intuitiva.
 
-- 1️⃣ Scenario Veicolo
-Target: Veicolo che attraversa dietro al veicolo in test (VUT)
-Velocità: 20 km/h
-Configurazione:
+Limitazioni: Dipendenza dalla qualità della depth camera simulata (può avere artefatti), tracker basato solo
+su ID (può fallire se l'oggetto viene perso e ri-rilevato), nessuna azione correttiva (solo allarmi).
 
-VUT in retromarcia, stazionario
-Due veicoli parcheggiati ai lati (ostacoli che creano "blind spot")
-Distanza laterale tra VUT e ostacoli: 0,7m
-Distanza longitudinale: 0,5m
+## Sviluppi Futuri
 
-- 2️⃣ Scenario Ciclista
-Target: Ciclista adulto che attraversa
-Velocità testate: 10 km/h e 15 km/h
-Configurazione: Identica allo scenario veicolo
+Cosa scrivere: Proponi miglioramenti.
 
-- 3️⃣ Scenario Pedone Adulto
-Target: Pedone adulto che attraversa
-Velocità: 5 km/h
-Configurazione: Identica agli scenari precedenti
+Filtro di Kalman: Integrare un filtro di Kalman nel tracker (_update_tracks_and_calc_ttc) per stabilizzare 
+le stime di velocità e TTC.
 
-- 4️⃣ Scenario Pedone Bambino
-Target: Pedone bambino
-Velocità testate: 5 km/h e 10 km/h
-Configurazione: Identica agli scenari precedenti
+Frenata Automatica (AEB-R): Aggiungere un modulo di "Attuazione" che applichi automaticamente i freni 
+(ego_vehicle.apply_control) se viene emesso un allarme "danger" e il conducente non reagisce.
 
-- 5 Scenario complesso, multipli attraversamento
+Test con Sensori Reali: Adattare il sistema per funzionare con dati di sensori reali 
+(es. telecamere OAK-D o ZED) anziché con CARLA.
+
+
+## Considerazioni Finali
+
+Cosa scrivere: Una breve frase di chiusura sull'importanza di questi sistemi per la sicurezza veicolare e 
+su come il prototipo abbia raggiunto gli obiettivi prefissati.
 
