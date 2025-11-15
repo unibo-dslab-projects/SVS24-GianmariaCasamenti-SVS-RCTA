@@ -10,7 +10,16 @@ nav_order: 3
 
 Cosa scrivere: Inizia con un diagramma a blocchi di alto livello.
 
-(CARLA Simulator) -> (Sensori: 3x RGBD Cam) -> (Perception Module) -> (Decision Making Module) -> (MQTT Broker) -> (HMI Display)
+```mermaid
+graph LR
+    A[CARLA Simulator] --> B1[Rear RGBD]
+    A --> B2[Left RGBD]
+    A --> B3[Right RGBD]
+    B1 & B2 & B3 --> C[Perception Module<br/>YOLO + Depth Fusion]
+    C --> D[Decision Making<br/>TTC & Distance Check]
+    D --> E[MQTT Broker]
+    E --> F[HMI Display<br/>Visual Alerts]
+```
 
 ## Sensor configuration
 
