@@ -25,12 +25,14 @@ the CARLA autonomous driving simulator.
 
 ## **Index**
 
-- [1️⃣ Introduction](sections/1_Introduction.md)
-- [2️⃣ Requirements](sections/2_Requirements.md)
-- [3️⃣ Design](sections/3_Design.md)
-- [4️⃣ Technologies used](sections/4_Tecnologies.md)
-- [5️⃣ Deployment](sections/5_Deployment.md)
-- [6️⃣ Conclusions](sections/6_Conclusions.md)
+- [Introduction](sections/1_Introduction.md)
+- [Requirements](sections/2_Requirements.md)
+- [Architecture](sections/3_Architecture.md)
+- [Implementation](sections/4_Implementation.md)
+- [Technologies used](sections/4_Tecnologies.md)
+- [Deployment](sections/5_Deployment.md)
+- [Test & Result](sections/5_Test.md)
+- [Conclusions](sections/6_Conclusions.md)
 
 ---
 

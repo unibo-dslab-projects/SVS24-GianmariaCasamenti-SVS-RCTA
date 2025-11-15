@@ -1,15 +1,20 @@
 ---
 layout: default
-title: Design
+title: Architecture
 nav_order: 3
 ---
 
-# Design of proposed solution
+# System Architecture
 
-## Sensor used
+## Panoramica dell'Architettura
 
+Cosa scrivere: Inizia con un diagramma a blocchi di alto livello.
 
-## Cameras positioning
+(CARLA Simulator) -> (Sensori: 3x RGBD Cam) -> (Perception Module) -> (Decision Making Module) -> (MQTT Broker) -> (HMI Display)
+
+## Sensor configuration
+
+Cosa scrivere: Spiega la configurazione dei sensori (simile alle sezioni 3.1-3.3 del PDF).
 
 <div class="carousel-container">
   <div class="carousel">
@@ -168,66 +173,27 @@ function currentSlide(index) {
 setInterval(() => moveSlide(1), 5000);
 </script>
 
+### Sensor used
 
-## Camera views
+Sensori Utilizzati: Spiega che hai usato 3 telecamere RGBD (RGB + Depth). Motiva la scelta: RGB per 
+il rilevamento (YOLO) e Depth per la stima della distanza.
 
-Each camera provides:
-- **Resolution**: 416x416 pixels
-- **Frame rate**: 20 FPS
-- **Data output**: RGB image + depth map (0-1000m range)
+### Cameras positioning
 
-## Sensors purpose
+Posizionamento delle Telecamere: Usa una tabella (come la 3.1 del PDF) per descrivere i parametri delle 
+3 telecamere (Rear, Left, Right) presi da config.py (es. REAR_CAMERA_TRANSFORM, LEFT_CAMERA_TRANSFORM, CAMERA_FOV, ecc.).
+
+### RCTA Sensor Configuration
 
 
-## Computer vision algorithm for detection
+| Camera    | Position (X, Y, Z)  | Resolution   | FPS   | FOV (deg)   | Rotation (Pitch, Yaw)   |
+|:----------|:--------------------|:-------------|:------|:------------|:------------------------|
+| **Rear**  | `(-2.0, 0.0, 0.9)`  | 416x416      | 20    | 60          | `(0, 180)`              |
+| **Left**  | `(-2.0, 0.0, 0.9)`  | 416x416      | 20    | 60          | `(0, 240)`              |
+| **Right** | `(-2.0, 0.0, 0.9)`  | 416x416      | 20    | 60          | `(0, 120)`              |
 
-### Detection Pipeline
+### Cameras view
+Viste delle Telecamere: Includi screenshot delle 3 viste della telecamera (generate da cv2.imshow in main.py) 
+per mostrare cosa "vede" il sistema.
 
-1. **Image Acquisition**: Capture synchronized RGB and depth frames
-2. **Object Detection**: YOLOv8 nano model detects vehicles, pedestrians, and bicycles
-3. **Object Tracking**: Maintains consistent IDs across frames
-4. **Distance Estimation**: Extracts depth values from bounding box ROI (10th percentile)
-5. **Velocity Calculation**: Computes relative velocity from consecutive measurements
-6. **TTC Computation**: Calculates Time-To-Collision when velocity > 0.5 m/s
-7. **Alert Generation**: Triggers WARNING (dist < 3m) or DANGER (TTC < 2.5s)
-
-### Algorithm Parameters
-
-- **Detection confidence**: 0.5
-- **Target classes**: person, bicycle, car, bus, truck
-- **Precision mode**: FP16 (half precision)
-- **Track persistence**: 1.0 second
-
-## Event publishing in MQTT broker
-
-### MQTT Architecture
-
-- **Broker**: Eclipse Mosquitto (localhost:1883)
-- **Topic**: `rcta/alerts`
-- **Message format**: JSON
-
-### Message Structure
-
-**Alert Message**:
-```json
-{
-  "alert": true,
-  "objects": [
-    {
-      "zone": "left|rear|right",
-      "alert_level": "warning|danger",
-      "class": "car|person|bicycle|bus|truck",
-      "distance": 2.5,
-      "ttc": 1.8
-    }
-  ]
-}
-```
-
-**Safe Message**:
-```json
-{
-  "alert": false,
-  "objects": []
-}
-```
+![image](../img/view3.png)
