@@ -6,9 +6,11 @@ nav_order: 3
 
 # System Architecture
 
-## Panoramica dell'Architettura
+## Architecture overview
 
-Cosa scrivere: Inizia con un diagramma a blocchi di alto livello.
+The RCTA system is designed with a modular architecture, which is orchestrated by the main simulation script (main.py). 
+The data flows from the CARLA simulator's sensors through perception, decision-making, and finally to the Human-Machine 
+Interface (HMI). This high-level architecture is depicted in the block diagram below.
 
 ```mermaid
 graph LR
@@ -23,7 +25,9 @@ graph LR
 
 ## Sensor configuration
 
-Cosa scrivere: Spiega la configurazione dei sensori (simile alle sezioni 3.1-3.3 del PDF).
+The system's perception relies on a carefully configured set of sensors designed to provide full coverage of the rear 
+cross-traffic zones. The setup is designed to mimic real-world RCTA systems, which need to monitor the blind spots 
+obscured by adjacent parked vehicles.
 
 <div class="carousel-container">
   <div class="carousel">
@@ -184,16 +188,20 @@ setInterval(() => moveSlide(1), 5000);
 
 ### Sensor used
 
-Sensori Utilizzati: Spiega che hai usato 3 telecamere RGBD (RGB + Depth). Motiva la scelta: RGB per 
-il rilevamento (YOLO) e Depth per la stima della distanza.
+The primary sensors for this project are three RGBD cameras. 
+This sensor type was chosen for its efficiency in fusing two critical data streams:
+- RGB (Color) Stream: Provides the visual data necessary for the YOLOv8 object detection model to 
+identify and classify relevant actors (e.g., 'car', 'bicycle', 'person').
+
+- Depth Stream: Provides a per-pixel distance map. This data is essential for accurately calculating the 
+distance to a detected object, which is a crucial input for Time-to-Collision (TTC) calculations.
 
 ### Cameras positioning
 
-Posizionamento delle Telecamere: Usa una tabella (come la 3.1 del PDF) per descrivere i parametri delle 
-3 telecamere (Rear, Left, Right) presi da config.py (es. REAR_CAMERA_TRANSFORM, LEFT_CAMERA_TRANSFORM, CAMERA_FOV, ecc.).
-
-### RCTA Sensor Configuration
-
+he three cameras are placed at a common mounting point on the rear of the vehicle (COMMON_REAR_LOCATION in config.py).
+They are positioned to cover three distinct zones: Rear-Left, Rear-Center, and Rear-Right. Their yaw angles are
+set to create a wide field of view, minimizing blind spots. The specific parameters, derived from config.py, 
+are detailed in the following table.
 
 | Camera    | Position (X, Y, Z)  | Resolution   | FPS   | FOV (deg)   | Rotation (Pitch, Yaw)   |
 |:----------|:--------------------|:-------------|:------|:------------|:------------------------|
@@ -202,7 +210,10 @@ Posizionamento delle Telecamere: Usa una tabella (come la 3.1 del PDF) per descr
 | **Right** | `(-2.0, 0.0, 0.9)`  | 416x416      | 20    | 60          | `(0, 120)`              |
 
 ### Cameras view
-Viste delle Telecamere: Includi screenshot delle 3 viste della telecamera (generate da cv2.imshow in main.py) 
-per mostrare cosa "vede" il sistema.
+
+The combined output of the three cameras provides the system with a comprehensive view of the area 
+behind the vehicle. The image below (generated during simulation using cv2.imshow) shows 
+the three camera feeds as processed by the perception module. 
+These views are what the system uses to detect and track potential hazards.
 
 ![image](../img/view3.png)
