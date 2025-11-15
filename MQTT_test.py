@@ -79,8 +79,7 @@ def main():
 
             # SCENARIO 5: Multi-direzione danger (DANGER)
             alert_multi = [
-                {"zone": "left", "alert_level": "danger", "class": "FAST", "distance": 10.0, "ttc": 1.1},
-                {"zone": "right", "alert_level": "danger", "class": "car", "distance": 9.0, "ttc": 1.4}
+                {"zone": "right", "alert_level": "danger", "class": "car", "distance": 7.0, "ttc": 1.4}
             ]
             print(f"Scenario [MULTI-DANGER]: Due oggetti in avvicinamento rapido")
             publisher.publish_status(alert_multi)
