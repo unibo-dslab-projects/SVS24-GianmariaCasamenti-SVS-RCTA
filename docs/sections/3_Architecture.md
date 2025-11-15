@@ -198,7 +198,7 @@ distance to a detected object, which is a crucial input for Time-to-Collision (T
 
 ### Cameras positioning
 
-he three cameras are placed at a common mounting point on the rear of the vehicle (COMMON_REAR_LOCATION in config.py).
+The three cameras are placed at a common mounting point on the rear of the vehicle (COMMON_REAR_LOCATION in config.py).
 They are positioned to cover three distinct zones: Rear-Left, Rear-Center, and Rear-Right. Their yaw angles are
 set to create a wide field of view, minimizing blind spots. The specific parameters, derived from config.py, 
 are detailed in the following table.

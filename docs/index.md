@@ -1,6 +1,7 @@
 ---
 layout: home
-title: SVS - Rear Cross Traffic Alert
+title: HomePage
+nav_order: 0
 ---
 
 # **Rear Cross Traffic Alert**

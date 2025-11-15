@@ -18,14 +18,10 @@ su ID (può fallire se l'oggetto viene perso e ri-rilevato), nessuna azione corr
 
 Cosa scrivere: Proponi miglioramenti.
 
-Filtro di Kalman: Integrare un filtro di Kalman nel tracker (_update_tracks_and_calc_ttc) per stabilizzare 
-le stime di velocità e TTC.
+- Watch DOG
 
-Frenata Automatica (AEB-R): Aggiungere un modulo di "Attuazione" che applichi automaticamente i freni 
+- Frenata Automatica (AEB-R): Aggiungere un modulo di "Attuazione" che applichi automaticamente i freni 
 (ego_vehicle.apply_control) se viene emesso un allarme "danger" e il conducente non reagisce.
-
-Test con Sensori Reali: Adattare il sistema per funzionare con dati di sensori reali 
-(es. telecamere OAK-D o ZED) anziché con CARLA.
 
 
 ## Considerazioni Finali
