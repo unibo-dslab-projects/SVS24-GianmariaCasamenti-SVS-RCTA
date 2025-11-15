@@ -74,12 +74,14 @@ The payload format is binary, based on whether any threats are present:
 The objects list contains detailed dictionaries for each object, including its zone, alert_level, class, distance, and ttc.
 
 ### HMI Display
-![image](../img/hmi.png)
+
 The hmi_display.py script is a standalone Pygame application that functions as the 
 MQTT client for the driver's interface. It runs as a completely separate process 
 from the main CARLA simulation. It initializes its own MQTT client and subscribes
 to the same MQTT_TOPIC_ALERTS topic, listening for the JSON messages published by
 the MqttPublisher.
+
+![image](../img/hmi.png)
 
 Message Callback (_on_message) When a new message arrives from the broker,
 the _on_message callback function is triggered. This function is responsible 
