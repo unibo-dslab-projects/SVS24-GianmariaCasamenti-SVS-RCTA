@@ -1,65 +1,52 @@
 import carla
 import random
 import config
-from config import EGO_VEHICLE_MODEL
 
 
-def setup_static_scenario(world, spawner):
-    print("Creating static parking lot scenario")
-
-    try:
-        ego_vehicle = spawner.spawn_vehicle(
-            model=EGO_VEHICLE_MODEL,
+def setup_rcta_base_scenario(world, spawner, blocking_cars=True, bad_weather=False):
+    # Spawn ego vehicle
+    ego_vehicle = spawner.spawn_vehicle(
+            model=config.EGO_VEHICLE_MODEL,
             spawn_point=config.EGO_SPAWN_TRANSFORM,
             autopilot=False
-        )
-    except AttributeError as e:
-        print(f"error: {e}")
-        return None
+    )
 
     if not ego_vehicle:
-        print(f"Failure to spawn ego_vehicle for the scenario")
+        print(f"[ERROR] Failed to spawn ego vehicle")
         return None
 
-    print(f"Vehicle spawned in position: {config.EGO_SPAWN_TRANSFORM.location}")
-
+    # Spawn blocking vehicles se richiesto
     spawned_blockers = 0
-    for transform in config.BLOCKING_VEHICLE_TRANSFORMS:
-        model = random.choice(config.BLOCKING_VEHICLE_MODELS)
-        blocker = spawner.spawn_vehicle(model=model, spawn_point=transform, autopilot=False)
-        if blocker:
-            spawned_blockers += 1
+    if blocking_cars:
+        for transform in config.BLOCKING_VEHICLE_TRANSFORMS:
+            model = random.choice(config.BLOCKING_VEHICLE_MODELS)
+            blocker = spawner.spawn_vehicle(model=model, spawn_point=transform, autopilot=False)
+            if blocker:
+                spawned_blockers += 1
 
-    print(f"Spawned {spawned_blockers} blocker vehicles")
+    if bad_weather:
+        weather = carla.WeatherParameters(
+            cloudiness=80.0,
+            precipitation=30.0,
+            precipitation_deposits=50.0,
+            wind_intensity=50.0,
+            fog_density=30.0,
+            wetness=50.0
+        )
+        world.set_weather(weather)
+    else:
+        # Meteo chiaro
+        weather = carla.WeatherParameters.ClearNoon
+        world.set_weather(weather)
     return ego_vehicle
 
 
-def setup_parking_scenario(world, spawner):
-    print("Creating static parking lot scenario")
+def scenario_vehicle(world, spawner, blocking_cars, bad_weather):
+    print(f"[SCENARIO] Spawning scenario 1")
 
-    try:
-        ego_vehicle = spawner.spawn_vehicle(
-            model=EGO_VEHICLE_MODEL,
-            spawn_point=config.EGO_SPAWN_TRANSFORM,
-            autopilot=False
-        )
-    except AttributeError as e:
-        print(f"error: {e}")
-        return None, None
-
+    ego_vehicle = setup_rcta_base_scenario(world, spawner, blocking_cars, bad_weather)
     if not ego_vehicle:
-        print(f"Failure to spawn ego_vehicle for the scenario")
-        return None, None
-
-    print(f"Vehicle spawned in position: {config.EGO_SPAWN_TRANSFORM.location}")
-
-    spawned_blockers = 0
-    for transform in config.BLOCKING_VEHICLE_TRANSFORMS:
-        model = random.choice(config.BLOCKING_VEHICLE_MODELS)
-        blocker = spawner.spawn_vehicle(model=model, spawn_point=transform, autopilot=False)
-        if blocker:
-            spawned_blockers += 1
-    print(f"Spawned {spawned_blockers} blocker vehicles")
+        return None
 
     target_vehicle = spawner.spawn_vehicle(
         model=config.TARGET_VEHICLE_MODEL,
@@ -67,153 +54,70 @@ def setup_parking_scenario(world, spawner):
         autopilot=False
     )
     if not target_vehicle:
-        print("ERROR: target_vehicle not spawned.")
-        return ego_vehicle, None
+        print("ERROR: bicycle not spawned.")
+        return ego_vehicle
 
     target_vehicle.set_target_velocity(config.TARGET_VELOCITY)
-    print(f"Vehicle spawned in position: {config.TARGET_SPAWN_TRANSFORM.location}")
+    return ego_vehicle
 
-    return ego_vehicle, target_vehicle
+def scenario_bicycle(world, spawner, blocking_cars, bad_weather):
+    print(f"[SCENARIO] Spawning scenario 2")
 
-
-def setup_parking_scenario_with_pedestrian(world, spawner):
-    print("Creating static parking lot scenario")
-
-    try:
-        ego_vehicle = spawner.spawn_vehicle(
-            model=EGO_VEHICLE_MODEL,
-            spawn_point=config.EGO_SPAWN_TRANSFORM,
-            autopilot=False
-        )
-    except AttributeError as e:
-        print(f"error: {e}")
-        return None
-
+    ego_vehicle = setup_rcta_base_scenario(world, spawner, blocking_cars, bad_weather)
     if not ego_vehicle:
-        print(f"Failure to spawn ego_vehicle for the scenario")
         return None
 
-    print(f"Vehicle spawned in position: {config.EGO_SPAWN_TRANSFORM.location}")
+    bicycle = spawner.spawn_vehicle(
+        model=config.BICYCLE_MODEL,
+        spawn_point=config.BICYCLE_SPAWN_TRANSFORM,
+        autopilot=False
+    )
+    if not bicycle:
+        print("ERROR: target_vehicle not spawned.")
+        return ego_vehicle
 
-    spawned_blockers = 0
-    for transform in config.BLOCKING_VEHICLE_TRANSFORMS:
-        model = random.choice(config.BLOCKING_VEHICLE_MODELS)
-        blocker = spawner.spawn_vehicle(model=model, spawn_point=transform, autopilot=False)
-        if blocker:
-            spawned_blockers += 1
-    print(f"Spawned {spawned_blockers} blocker vehicles")
+    bicycle.set_target_velocity(config.BICYCLE_VELOCITY)
+    return ego_vehicle
 
-    print("Spawning pedestrian in scenario...")
-    pedestrian, pedestrian_controller = spawner.spawn_pedestrian(
+def scenario_pedestrian_adult(world, spawner, blocking_cars, bad_weather):
+    print(f"[SCENARIO] Spawning scenario 3")
+
+    ego_vehicle = setup_rcta_base_scenario(world, spawner, blocking_cars, bad_weather)
+    if not ego_vehicle:
+        return None
+
+    pedestrian = spawner.spawn_pedestrian(
         model=config.PEDESTRIAN_MODEL,
         spawn_point=config.PEDESTRIAN_SPAWN_TRANSFORM,
         destination=config.PEDESTRIAN_DESTINATION,
         speed=config.PEDESTRIAN_WALK_SPEED
     )
+
     if not pedestrian:
-        print("ERRORE: pedestrian spawn failed")
+        print("ERROR: pedestrian not spawned.")
+        return ego_vehicle
 
     return ego_vehicle
 
 
-def setup_complex_scenario(world, spawner):
-    print("Creating COMPLEX parking lot scenario")
+def scenario_pedestrian_child(world, spawner, blocking_cars, bad_weather):
+    print(f"[SCENARIO] Spawning scenario 4")
 
-    try:
-        ego_vehicle = spawner.spawn_vehicle(
-            model=config.EGO_VEHICLE_MODEL,
-            spawn_point=config.EGO_SPAWN_TRANSFORM,
-            autopilot=False
-        )
-    except AttributeError as e:
-        print(f"error: {e}")
-        return None
-
+    ego_vehicle = setup_rcta_base_scenario(world, spawner, blocking_cars, bad_weather)
     if not ego_vehicle:
-        print(f"Failure to spawn ego_vehicle for the scenario")
         return None
-    print(f"Ego vehicle spawned in position: {config.EGO_SPAWN_TRANSFORM.location}")
 
-    spawned_blockers = 0
-    for transform in config.BLOCKING_VEHICLE_TRANSFORMS:
-        model = random.choice(config.BLOCKING_VEHICLE_MODELS)
-        blocker = spawner.spawn_vehicle(model=model, spawn_point=transform, autopilot=False)
-        if blocker:
-            spawned_blockers += 1
-    print(f"Spawned {spawned_blockers} blocker vehicles")
+    pedestrian = spawner.spawn_pedestrian(
+        model=config.PEDESTRIAN_CHILD_MODEL,
+        spawn_point=config.PEDESTRIAN_SPAWN_TRANSFORM,
+        destination=config.PEDESTRIAN_DESTINATION,
+        speed=config.PEDESTRIAN_CHILD_WALK_SPEED
+    )
 
-    spawned_pedestrians = 0
-    print("Spawning pedestrians in complex scenario...")
-    for ped_data in config.PEDESTRIAN_ACTORS:
-        pedestrian, controller = spawner.spawn_pedestrian(
-            model=ped_data['model'],
-            spawn_point=ped_data['spawn'],
-            destination=ped_data['dest'],
-            speed=ped_data['speed']
-        )
-        if pedestrian:
-            spawned_pedestrians += 1
-        else:
-            print(f"ERROR: Failed to spawn pedestrian {ped_data['model']}")
-    print(f"Spawned {spawned_pedestrians} pedestrians")
-
-    spawned_bicycles = 0
-    print("Spawning bicycles in complex scenario...")
-    for bike_data in config.BICYCLE_ACTORS:
-        bicycle = spawner.spawn_vehicle(
-            model=bike_data['model'],
-            spawn_point=bike_data['spawn'],
-            autopilot=False
-        )
-        if bicycle:
-            bicycle.set_target_velocity(bike_data['velocity'])
-            spawned_bicycles += 1
-        else:
-            print(f"ERROR: Failed to spawn bicycle {bike_data['model']}")
-    print(f"Spawned {spawned_bicycles} bicycles")
+    if not pedestrian:
+        print("ERROR: pedestrian not spawned.")
+        return ego_vehicle
 
     return ego_vehicle
 
 
-def setup_vehicle_crossing_scenario(world, spawner):
-    print("Creating VEHICLE CROSSING scenario")
-
-    try:
-        ego_vehicle = spawner.spawn_vehicle(
-            model=config.EGO_VEHICLE_MODEL,
-            spawn_point=config.EGO_SPAWN_TRANSFORM,
-            autopilot=False
-        )
-    except AttributeError as e:
-        print(f"error: {e}")
-        return None
-
-    if not ego_vehicle:
-        print(f"Failure to spawn ego_vehicle for the scenario")
-        return None
-    print(f"Ego vehicle spawned in position: {config.EGO_SPAWN_TRANSFORM.location}")
-
-    spawned_blockers = 0
-    for transform in config.BLOCKING_VEHICLE_TRANSFORMS:
-        model = random.choice(config.BLOCKING_VEHICLE_MODELS)
-        blocker = spawner.spawn_vehicle(model=model, spawn_point=transform, autopilot=False)
-        if blocker:
-            spawned_blockers += 1
-    print(f"Spawned {spawned_blockers} blocker vehicles")
-
-    spawned_vehicles = 0
-    print("Spawning crossing vehicles in scenario...")
-    for vehicle_data in config.CROSSING_VEHICLE_ACTORS:
-        vehicle = spawner.spawn_vehicle(
-            model=vehicle_data['model'],
-            spawn_point=vehicle_data['spawn'],
-            autopilot=False
-        )
-        if vehicle:
-            vehicle.set_target_velocity(vehicle_data['velocity'])
-            spawned_vehicles += 1
-        else:
-            print(f"ERROR: Failed to spawn vehicle {vehicle_data['model']}")
-    print(f"Spawned {spawned_vehicles} crossing vehicles")
-
-    return ego_vehicle

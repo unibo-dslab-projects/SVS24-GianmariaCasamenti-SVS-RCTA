@@ -27,6 +27,8 @@ BLOCKING_VEHICLE_MODELS = [
     'vehicle.ford.mustang',
     'vehicle.chevrolet.impala'
 ]
+
+#scenario 1
 BLOCKING_VEHICLE_TRANSFORMS = [
     carla.Transform(
         carla.Location(x=-30.0, y=-27.0, z=0.5),
@@ -41,78 +43,34 @@ BLOCKING_VEHICLE_TRANSFORMS = [
         carla.Rotation(yaw=0)
     )
 ]
-TARGET_VEHICLE_MODEL = 'vehicle.mercedes.sprinter'
+#scenario1
+TARGET_VEHICLE_MODEL = 'vehicle.tesla.model3'
 TARGET_SPAWN_TRANSFORM = carla.Transform(
-    carla.Location(x=-35.0, y=-40.0, z=0.5),
-    carla.Rotation(yaw=90)
+    carla.Location(x=-35.0, y=-15.0, z=0.5),
+    carla.Rotation(yaw=270)
 )
-#2 m/s (circa 7 km/h)
-TARGET_VELOCITY = carla.Vector3D(x=0, y=2.0, z=0)
-PEDESTRIAN_MODEL = 'walker.pedestrian.0002'
+TARGET_VELOCITY= carla.Vector3D(x=0, y=-5.56, z=0)  # 20 km/h = 5.56 m/s
+
+#scenario2
+BICYCLE_MODEL = 'vehicle.diamondback.century'
+# Spawn da SINISTRA
+BICYCLE_SPAWN_TRANSFORM = carla.Transform(
+    carla.Location(x=-35.0, y=-15.0, z=0.5),
+    carla.Rotation(yaw=270)
+)
+BICYCLE_VELOCITY= carla.Vector3D(x=0, y=-2.78, z=0)  # 10 km/h = 2.78 m/s
+
+#scenario 3 and 4
+PEDESTRIAN_MODEL = 'walker.pedestrian.0038'
+PEDESTRIAN_CHILD_MODEL = 'walker.pedestrian.0048'
 PEDESTRIAN_SPAWN_TRANSFORM = carla.Transform(
-    carla.Location(x=-33, y=-40.0, z=0.5),
-    carla.Rotation(yaw =90)
+    carla.Location(x=-33, y=-25.0, z=0.5),
+    carla.Rotation(yaw =270)
 )
 
-PEDESTRIAN_DESTINATION = carla.Location(x=-31.4, y=-25.2, z=0.5)
-PEDESTRIAN_WALK_SPEED = 2.0
-
-PEDESTRIAN_ACTORS = [
-    {
-        'model': 'walker.pedestrian.0002', # Pedone 1 (simile all'originale)
-        'spawn': carla.Transform(carla.Location(x=-31.4, y=-40.0, z=0.5), carla.Rotation(yaw=90)),
-        'dest': carla.Location(x=-31.4, y=-30.2, z=0.5),
-        'speed': 1.4
-    },
-    {
-        'model': 'walker.pedestrian.0003', # Pedone 2 (attraversa più lontano)
-        'spawn': carla.Transform(carla.Location(x=-33.0, y=-42.0, z=0.5), carla.Rotation(yaw=90)),
-        'dest': carla.Location(x=-33.0, y=-28.0, z=0.5),
-        'speed': 1.5
-    },
-    {
-        'model': 'walker.pedestrian.0004', # Pedone 3 (cammina in direzione opposta)
-        'spawn': carla.Transform(carla.Location(x=-34.0, y=-28.0, z=0.5), carla.Rotation(yaw=-90)),
-        'dest': carla.Location(x=-34.0, y=-42.0, z=0.5),
-        'speed': 1.3
-    }
-]
-
-BICYCLE_ACTORS = [
-    {
-        'model': 'vehicle.diamondback.century', # Bici 1 (attraversa verso nord)
-        'spawn': carla.Transform(carla.Location(x=-36.0, y=-45.0, z=0.5), carla.Rotation(yaw=90)),
-        'velocity': carla.Vector3D(x=0, y=3.0, z=0) # 3 m/s (più veloce di un pedone)
-    },
-    {
-        'model': 'vehicle.gazelle.omafiets', # Bici 2 (attraversa verso sud)
-        'spawn': carla.Transform(carla.Location(x=-37.0, y=-28.0, z=0.5), carla.Rotation(yaw=-90)),
-        'velocity': carla.Vector3D(x=0, y=-2.5, z=0) # 2.5 m/s
-    }
-]
-
-CROSSING_VEHICLE_ACTORS = [
-    {
-        'model': 'vehicle.tesla.model3', # Auto 1 (da destra, veloce)
-        'spawn': carla.Transform(carla.Location(x=-35.0, y=-45.0, z=0.5), carla.Rotation(yaw=90)),
-        'velocity': carla.Vector3D(x=0, y=5.0, z=0) # Veloce: 5 m/s (~18 km/h)
-    },
-    {
-        'model': 'vehicle.volkswagen.t2', # Auto 2 (da destra, lenta, furgone)
-        'spawn': carla.Transform(carla.Location(x=-36.0, y=-47.0, z=0.5), carla.Rotation(yaw=90)),
-        'velocity': carla.Vector3D(x=0, y=3.5, z=0) # Lenta: 3.5 m/s (~12.6 km/h)
-    },
-    {
-        'model': 'vehicle.harley-davidson.low_rider', # Auto 3 (da sinistra, molto veloce, moto)
-        'spawn': carla.Transform(carla.Location(x=-37.0, y=-25.0, z=0.5), carla.Rotation(yaw=-90)),
-        'velocity': carla.Vector3D(x=0, y=-6.0, z=0) # Molto veloce: 6 m/s (~21.6 km/h)
-    },
-    {
-        'model': 'vehicle.audi.a2', # Auto 4 (da sinistra, media)
-        'spawn': carla.Transform(carla.Location(x=-35.5, y=-24.0, z=0.5), carla.Rotation(yaw=-90)),
-        'velocity': carla.Vector3D(x=0, y=-4.0, z=0) # Media: 4 m/s (~14.4 km/h)
-    }
-]
+PEDESTRIAN_DESTINATION = carla.Location(x=-31.5, y=-37.0, z=0.5)
+PEDESTRIAN_WALK_SPEED = 1.39  # 5 km/h = 1.39 m/s
+PEDESTRIAN_CHILD_WALK_SPEED = 2.0  # 7 km/h
 
 #_____________________________________CAMERAS SETTING________________________
 CAMERA_IMAGE_WIDTH = 416 #640

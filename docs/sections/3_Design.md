@@ -164,6 +164,8 @@ function currentSlide(index) {
   showSlide(currentIndex);
 }
 
+// Auto-advance ogni 5 secondi (opzionale)
+setInterval(() => moveSlide(1), 5000);
 </script>
 
 
