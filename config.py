@@ -46,16 +46,16 @@ BLOCKING_VEHICLE_TRANSFORMS = [
 #scenario1
 TARGET_VEHICLE_MODEL = 'vehicle.tesla.model3'
 TARGET_SPAWN_TRANSFORM = carla.Transform(
-    carla.Location(x=-35.0, y=-15.0, z=0.5),
+    carla.Location(x=-35.0, y=-13.0, z=0.5),
     carla.Rotation(yaw=270)
 )
-TARGET_VELOCITY= carla.Vector3D(x=0, y=-5.56, z=0)  # 20 km/h = 5.56 m/s
+TARGET_VELOCITY= carla.Vector3D(x=0, y=-3.56, z=0)  # 20 km/h = 5.56 m/s
 
 #scenario2
 BICYCLE_MODEL = 'vehicle.diamondback.century'
 # Spawn da SINISTRA
 BICYCLE_SPAWN_TRANSFORM = carla.Transform(
-    carla.Location(x=-35.0, y=-15.0, z=0.5),
+    carla.Location(x=-35.0, y=-13.0, z=0.5),
     carla.Rotation(yaw=270)
 )
 BICYCLE_VELOCITY= carla.Vector3D(x=0, y=-2.78, z=0)  # 10 km/h = 2.78 m/s
@@ -95,9 +95,9 @@ RIGHT_CAMERA_TRANSFORM = carla.Transform(
 YOLO_MODEL_PATH = 'models/yolov8n.pt'
 
 #_____________________________________RCTA SETTING________________________
-TTC_THRESHOLD = 2.5 #secondi
-DIST_THRESHOLD = 3.0 #metri
-DEBUG = True
+TTC_THRESHOLD = 3.5 #secondi
+DIST_THRESHOLD = 2.5 #metri
+DEBUG = False
 
 # True = asincrono (più stile notebook), False = sincrono (originale)
 ASYNC_MODE = True

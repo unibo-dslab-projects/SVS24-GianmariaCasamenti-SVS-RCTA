@@ -41,12 +41,8 @@ def setup_rcta_base_scenario(world, spawner, blocking_cars=True, bad_weather=Fal
     return ego_vehicle
 
 
-def scenario_vehicle(world, spawner, blocking_cars, bad_weather):
+def scenario_vehicle(spawner):
     print(f"[SCENARIO] Spawning scenario 1")
-
-    ego_vehicle = setup_rcta_base_scenario(world, spawner, blocking_cars, bad_weather)
-    if not ego_vehicle:
-        return None
 
     target_vehicle = spawner.spawn_vehicle(
         model=config.TARGET_VEHICLE_MODEL,
@@ -54,18 +50,12 @@ def scenario_vehicle(world, spawner, blocking_cars, bad_weather):
         autopilot=False
     )
     if not target_vehicle:
-        print("ERROR: bicycle not spawned.")
-        return ego_vehicle
+        print("ERROR: car not spawned.")
 
     target_vehicle.set_target_velocity(config.TARGET_VELOCITY)
-    return ego_vehicle
 
-def scenario_bicycle(world, spawner, blocking_cars, bad_weather):
+def scenario_bicycle(spawner):
     print(f"[SCENARIO] Spawning scenario 2")
-
-    ego_vehicle = setup_rcta_base_scenario(world, spawner, blocking_cars, bad_weather)
-    if not ego_vehicle:
-        return None
 
     bicycle = spawner.spawn_vehicle(
         model=config.BICYCLE_MODEL,
@@ -74,17 +64,11 @@ def scenario_bicycle(world, spawner, blocking_cars, bad_weather):
     )
     if not bicycle:
         print("ERROR: target_vehicle not spawned.")
-        return ego_vehicle
 
     bicycle.set_target_velocity(config.BICYCLE_VELOCITY)
-    return ego_vehicle
 
-def scenario_pedestrian_adult(world, spawner, blocking_cars, bad_weather):
+def scenario_pedestrian_adult(spawner):
     print(f"[SCENARIO] Spawning scenario 3")
-
-    ego_vehicle = setup_rcta_base_scenario(world, spawner, blocking_cars, bad_weather)
-    if not ego_vehicle:
-        return None
 
     pedestrian = spawner.spawn_pedestrian(
         model=config.PEDESTRIAN_MODEL,
@@ -95,17 +79,11 @@ def scenario_pedestrian_adult(world, spawner, blocking_cars, bad_weather):
 
     if not pedestrian:
         print("ERROR: pedestrian not spawned.")
-        return ego_vehicle
-
-    return ego_vehicle
 
 
-def scenario_pedestrian_child(world, spawner, blocking_cars, bad_weather):
+
+def scenario_pedestrian_child( spawner):
     print(f"[SCENARIO] Spawning scenario 4")
-
-    ego_vehicle = setup_rcta_base_scenario(world, spawner, blocking_cars, bad_weather)
-    if not ego_vehicle:
-        return None
 
     pedestrian = spawner.spawn_pedestrian(
         model=config.PEDESTRIAN_CHILD_MODEL,
@@ -116,8 +94,8 @@ def scenario_pedestrian_child(world, spawner, blocking_cars, bad_weather):
 
     if not pedestrian:
         print("ERROR: pedestrian not spawned.")
-        return ego_vehicle
 
-    return ego_vehicle
+
+
 
 

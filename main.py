@@ -10,7 +10,9 @@ from carla_bridge.sensor_manager import SensorManager
 from scenarios.parking_lot_scenario import (scenario_vehicle,
                                             scenario_bicycle,
                                             scenario_pedestrian_adult,
-                                            scenario_pedestrian_child)
+                                            scenario_pedestrian_child,
+                                            setup_rcta_base_scenario)
+
 from rcta_system.perception import RctaPerception
 from rcta_system.decision_making import DecisionMaker
 from hmi.mqtt_publisher import MqttPublisher
@@ -21,9 +23,6 @@ def draw_fused_detections(image, perception_data):
     RED = (0, 0, 255)
     YELLOW = (0,255,255)
     GREEN = (0, 255, 0)
-
-    sector_ttc = perception_data['ttc']
-    sector_dist = perception_data['dist']
 
     for det in perception_data['objects']:
         bbox = [int(c) for c in det['bbox']]
@@ -45,10 +44,6 @@ def draw_fused_detections(image, perception_data):
         cv2.rectangle(image, (bbox[0], bbox[1]), (bbox[2], bbox[3]), color, 2)
         cv2.putText(image, label, (bbox[0], bbox[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
-    #info_color = RED if (sector_ttc < config.TTC_THRESHOLD or sector_dist < 3.0) else GREEN
-    #info_text = f"MIN DIST: {sector_dist:.1f}m | MIN TTC: {sector_ttc:.1f}s"
-    #cv2.putText(image, info_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, info_color, 2)
-
 
 def main():
     pygame.init()
@@ -62,12 +57,10 @@ def main():
         with CarlaManager() as manager:
             print("MAIN [Initializing scenario]")
             spawner = Spawner(manager.world, manager.actor_list)
-            #ego_vehicle = scenario_vehicle(manager.world,spawner, True, False)
-            ego_vehicle = scenario_bicycle(manager.world,spawner, True, True)
-            #ego_vehicle = scenario_pedestrian_adult(manager.world,spawner, True, False)
-            #ego_vehicle = scenario_pedestrian_child(manager.world,spawner, True, False)
 
-
+            ego_vehicle = setup_rcta_base_scenario(manager.world, spawner, True, True)
+            if not ego_vehicle:
+                return None
 
             print("MAIN [Initializing perception and Sensor manager]")
             perception_system = RctaPerception()
@@ -94,6 +87,12 @@ def main():
             print("MAIN [Initializing spectator]")
             spectator = manager.world.get_spectator()
 
+
+            #scenario_vehicle(spawner)
+            #scenario_bicycle(spawner)
+            #scenario_pedestrian_adult(spawner)
+            #scenario_pedestrian_child(spawner)
+
             time.sleep(1.0)
             running = True
             while running:
@@ -117,7 +116,9 @@ def main():
                 is_reversing = control.reverse
 
                 all_perception_data = perception_system.get_all_perception_data(True)
-                dangerous_objects = decision_maker.evaluate(all_perception_data, is_reversing)
+                #print({k: v['ttc'] for k, v in all_perception_data.items()})
+
+                dangerous_objects = decision_maker.evaluate(all_perception_data, True)
                 mqtt_publisher.publish_status(dangerous_objects)
 
                 if config.DEBUG:

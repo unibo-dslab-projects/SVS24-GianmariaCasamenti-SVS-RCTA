@@ -6,11 +6,11 @@ import config
 class KeyboardController:
     def __init__(self):
         self._control = carla.VehicleControl()
-        self._throttle = 0.6
+        self._throttle = 0.3
         self._steer_increment = 0.05
         self._steer = 0.0
         self._brake_strength = 1.0
-        self._max_throttle = 0.8
+        self._max_throttle = 0.6
         self._min_throttle = 0.3
         self._steer_damping = 0.15
 
