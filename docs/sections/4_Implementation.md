@@ -3,44 +3,100 @@ layout: default
 title: Implementation
 nav_order: 4
 ---
-
 # Solution implementation
 
 ## Perception Module
 
-osa scrivere: Descrivi il cuore del sistema.
+This module serves as the core system, tasked with understanding the 
+environment through sensor data.
 
-### Rilevamento Oggetti (object_detector.py): 
-Spiega l'uso di YOLOv8n (dettagliato nel Capitolo 5). 
-Menziona che il modello è pre-addestrato (su COCO) e filtrato per le classi di interesse (target_classes). 
-Spiega l'uso del tracking (model.track) per assegnare un ID a ogni oggetto.
+### Object Detection 
+The system employs the YOLOv8n (nano) architecture for object detection,
+chosen for its real-time performance. The model is initialized using
+weights pre-trained on the COCO dataset, ensuring robustness in recognizing
+common actors. To reduce noise, the detector filters results to only 
+include specific target classes: person, bicycle, car, bus, and truck. 
 
-### Elaborazione della Profondità: 
-Descrivi la funzione _decode_depth_to_meters. Spiega come converte 
-l'immagine di profondità grezza di CARLA (in 3 canali uint8) in metri. Menziona l'uso di @numba.jit per l'ottimizzazione.
+Crucially, the system utilizes the model.track method with persist=True,
+which assigns and maintains a unique numerical ID for every detected 
+object across frames, enabling the calculation of velocity and trajectory.
+
+### Depth processing 
+Distance estimation relies on the depth camera stream. 
+
+CARLA outputs depth information encoded in a standard 3-channel RGB image.
+The _decode_depth_to_meters function converts this raw data into a metric
+float matrix. 
+
+It applies the standard decoding formula:
+normalized = (R + G * 256 + B * 256 * 256) / (256^3 - 1) * 1000. 
+
+To ensure this heavy pixel-wise operation does not bottleneck 
+the main loop, the function is optimized using the @numba.jit 
+decorator for just-in-time compilation.
 
 ### Fusione Sensoriale (RGB+D): 
-Spiega la funzione _fuse_results. Descrivi come il bounding box (da YOLO)
-viene usato per estrarre una ROI (Region of Interest) dalla mappa di profondità (in metri) per calcolare 
-la distanza dell'oggetto (usando np.percentile per robustezza).
+The _fuse_results function bridges the gap between the 2D 
+detections and 3D depth map. For each bounding box identified by YOLO:
+
+- The coordinates are used to extract a corresponding Region of Interest 
+(ROI) from the decoded depth map.
+
+- To estimate the distance robustly, the system calculates the 
+10th percentile of the depth values within that ROI 
+(np.percentile(roi, 10)).
+This approach is significantly more reliable than using the mean or 
+median, as it correctly identifies the closest point of the 
+object (e.g., the bumper of a car) while filtering out background 
+pixels that might be included in the bounding box.
 
 ### Tracking e Calcolo TTC: 
-Spiega la funzione _update_tracks_and_calc_ttc. Descrivi come usi il dizionario 
-tracked_objects_* per memorizzare lo stato precedente (distanza, tempo) e calcolare la velocità relativa 
-(delta_d / delta_t) e, infine, il TTC (obj['dist'] / rel_velocity).
+To assess danger, the system must know how fast an object is approaching.
+The _update_tracks_and_calc_ttc function manages this by storing the 
+history of every object ID in dictionaries (e.g., tracked_objects_rear). 
+
+By comparing the object's current distance and timestamp against its 
+previous state, the system calculates the relative velocity 
+(delta_d / delta_t). If the object is approaching (rel_velocity > 0.5),
+the Time-to-Collision (TTC) is computed as current_distance / relative_velocity.
 
 ## Decision module 
-Cosa scrivere: Descrivi la logica di allerta.
+This module processes the fused perception data to determine if an
+alert is necessary.
 
-Logica di Valutazione: Spiega la funzione evaluate. Prima controlla is_reversing.
+### Evaluation Logic
+The core logic resides in the evaluate method of the DecisionMaker class.
+As a preliminary check, it verifies if the ego vehicle is currently reversing (is_reversing flag). 
+If the vehicle is not in reverse, the system suppresses all alerts and returns an empty list.
 
-Generazione Allarmi: Spiega la doppia soglia:
+### Alert Generation
+The system iterates through the data from all three zones 
+(left, rear, right) and applies a two-tier threshold logic to
+generate alerts:
 
-Se il TTC di un oggetto è inferiore a TTC_THRESHOLD (da config.py), genera un allarme di livello "danger".
+- Danger Level (TTC): If an object's projected Time-to-Collision is 
+lower than the TTC_THRESHOLD (defined as 2.5 seconds in config.py),
+the system triggers a "danger" alert. In this scenario, it prioritizes 
+the object with the lowest TTC.
 
-Altrimenti, se la distanza è inferiore a DIST_THRESHOLD, genera un allarme di livello "warning".
+- Warning Level (Distance): If no TTC violation is detected, 
+the system checks the physical distance. 
+If an object is closer than the DIST_THRESHOLD (defined as 3.0 meters 
+in config.py), a "warning" alert is triggered.
 
-Formato Output: Mostra la struttura dati della lista dangerous_objects_list che viene restituita.
+### Output Format
+The function returns a dangerous_objects_list, which is a list of dictionaries ready for MQTT transmission. 
+The structure ensures the HMI receives all necessary context:
+
+```
+{
+    "zone": "rear",          # The detection zone (left/rear/right)
+    "alert_level": "danger", # Priority level
+    "class": "car",          # Object type
+    "distance": 4.5,         # Current distance in meters
+    "ttc": 1.2               # Time to collision in seconds
+}
+```
 
 ## Comunicazione e HMI (MQTT)
 
