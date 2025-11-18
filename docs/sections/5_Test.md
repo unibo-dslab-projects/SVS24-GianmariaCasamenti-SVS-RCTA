@@ -5,8 +5,8 @@ nav_order: 7
 ---
 
 # Test and Result
-The testing methodology is adapted from the scientific article "Study on Test and Evaluation Method 
-of Rear Cross Traffic Alert System". 
+The testing methodology is adapted from the scientific article [Study on Test and Evaluation Method 
+of Rear Cross Traffic Alert System](https://www.spiedigitallibrary.org/conference-proceedings-of-spie/13018/130181I/Study-on-test-and-evaluation-method-of-rear-cross-traffic/10.1117/12.3024096.full). 
 
 Following this standard, we established a baseline geometric 
 setup where the Vehicle Under Test (VUT) is placed in a parking spot, in reverse gear, and kept stationary.
@@ -190,50 +190,33 @@ setInterval(() => moveSlide(1), 5000);
 </script>
 
 
-### Environmental Variables
-To evaluate the robustness of the perception module (YOLO + Depth), 
+To evaluate the robustness of the RCTA system, 
 each of the four scenarios above was tested under two distinct environmental conditions:
 
-- Ideal Conditions (bad_weather=False): Clear noon weather with optimal lighting and visibility.
+- Ideal Conditions ```bad_weather=False```: Clear noon weather with optimal lighting and visibility.
 
-- Adverse Conditions (bad_weather=True): Heavy rain and fog. This tests the degradation of 
+- Adverse Conditions ```bad_weather=True```: Heavy rain and fog. This tests the degradation of 
 the RGB camera's visibility and the depth camera's clarity, simulating a worst-case real-world situation.
 
 ## Evaluation Metrics 
 
-The primary quantitative metric for evaluation is the Time-to-Collision (TTC) at the moment of the first alarm.
-According to the reference study, a successful RCTA system must trigger an alarm while the TTC is
-greater than 1.7 seconds. Our system uses a more conservative safety threshold of 2.5 seconds 
-(defined in config.py) to ensure an adequate safety margin.
+The main quantitative parameter for evaluation is the time to collision (TTC) at the moment of the first alarm.
+According to the reference study, an effective RCTA system must activate an alarm when the TTC is greater than
+1.7 seconds. Our system uses a more conservative safety threshold of 3.5 seconds to ensure 
+an adequate safety margin.
 
-In the absence of an automated ground-truth validation suite, the system performance is 
-further evaluated using the following qualitative metrics:
-
-Detection Correctness: Verifying if the specific class (Car vs. Person) 
-was correctly identified by YOLO despite the occlusion caused by the blocking cars.
-
-False Positive Rate: Monitoring if the system incorrectly triggers an 
-alarm on the stationary blocking vehicles or background objects.
-This aligns with the "False Trigger" test method described in the literature, 
-where the system must remain silent if a target stops before entering the collision path.
-
-Alert Timeliness: Assessing if the "Danger" status (Red) on the HMI appears immediately when the
-calculated TTC drops below the threshold, validating the low latency of the MQTT communication.
+Another qualitative parameter is detection accuracy: it checks whether the specific class has been correctly
+identified by YOLO despite the occlusion caused by cars blocking the view.
 
 ## Analysis of results
 
-Cosa scrivere: Riporta eventuali osservazioni.
+![Video Result](https://drive.google.com/drive/folders/1lnfjyTRItry3ehBIEFgoYkfPKbvRfLZF?usp=sharing)
 
-Impatto Meteo Avverso: Il meteo avverso ha ridotto l'accuratezza di YOLO o la precisione della mappa di profondità?
+**TO DO**
 
-Occlusioni: Come si è comportato il sistema quando l'attore era parzialmente nascosto dalle blocking_cars?
+- Impatto Meteo Avverso: 
+Il meteo avverso non ha ridotto l'accuratezza di YOLO o la precisione della mappa di profondità
 
-6.4 Analisi degli Errori
+- Come si è comportato il sistema quando l'attore era parzialmente nascosto dalle blocking_cars?
 
-Cosa scrivere: Descrivi i problemi riscontrati.
 
-Falsi Positivi: Il sistema ha generato allarmi per oggetti fermi o non pericolosi?
-
-Falsi Negativi: Il sistema ha mancato un attore in avvicinamento? (Es. un pedone piccolo o un ciclista veloce).
-
-Stabilità del TTC: Il valore del TTC era stabile o fluttuava molto a causa di errori nella stima della distanza?

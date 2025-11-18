@@ -6,26 +6,30 @@ nav_order: 8
 
 # Conclusions
 
-## Bilancio del Progetto (Punti di Forza e Debolezza)
+## Strengths and Weaknesses
 
-Punti di Forza: Design modulare (Perception/Decision/HMI), utilizzo di sensori avanzati (RGBD), stima del TTC 
-(più efficace della sola distanza), HMI chiara e intuitiva.
+The developed RCTA prototype demonstrates a solid foundation for ADAS development in simulated environments,
+characterized by several **key strengths**:
 
-Limitazioni: Dipendenza dalla qualità della depth camera simulata (può avere artefatti), tracker basato solo
-su ID (può fallire se l'oggetto viene perso e ri-rilevato), nessuna azione correttiva (solo allarmi).
+- Modular Architecture: The decoupling of the perception system from the visualization via MQTT 
+is a significant design advantage. 
+
+- Advanced Sensor Fusion: the use of RGBD  sensors provides a deterministic measurement of the environment. 
+
+- Intuitive HMI: The sector-based user interface provides immediate data.
+
+
+However, the current implementation is subject to specific **limitations**:
+
+- Tracking Volatility: If an object is momentarily occluded by a blocking vehicle and re-emerges with a new ID,
+the tracking history is reset.
+
+- Passive Operation: The system is currently designed as a "alert" system only.
 
 ## Sviluppi Futuri
 
-Cosa scrivere: Proponi miglioramenti.
+To bridge the gap between this prototype and a production-ready safety system, the following enhancements are proposed:
 
-- Watch DOG
+- System Watchdog: A system that checks camera status. If a camera is damaged sends a message to HMI display.
 
-- Frenata Automatica (AEB-R): Aggiungere un modulo di "Attuazione" che applichi automaticamente i freni 
-(ego_vehicle.apply_control) se viene emesso un allarme "danger" e il conducente non reagisce.
-
-
-## Considerazioni Finali
-
-Cosa scrivere: Una breve frase di chiusura sull'importanza di questi sistemi per la sicurezza veicolare e 
-su come il prototipo abbia raggiunto gli obiettivi prefissati.
-
+- Automatic Emergency Braking: Extending the system from passive monitoring to active intervention. 
