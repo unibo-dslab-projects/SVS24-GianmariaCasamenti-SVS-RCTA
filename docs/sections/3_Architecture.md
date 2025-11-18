@@ -191,17 +191,18 @@ setInterval(() => moveSlide(1), 5000);
 The primary sensors for this project are three RGBD cameras. 
 This sensor type was chosen for its efficiency in fusing two critical data streams:
 - RGB (Color) Stream: Provides the visual data necessary for the YOLOv8 object detection model to 
-identify and classify relevant actors (e.g., 'car', 'bicycle', 'person').
+identify and classify relevant actors.
 
 - Depth Stream: Provides a per-pixel distance map. This data is essential for accurately calculating the 
 distance to a detected object, which is a crucial input for Time-to-Collision (TTC) calculations.
 
 ### Cameras positioning
 
-The three cameras are placed at a common mounting point on the rear of the vehicle (COMMON_REAR_LOCATION in config.py).
-They are positioned to cover three distinct zones: Rear-Left, Rear-Center, and Rear-Right. Their yaw angles are
-set to create a wide field of view, minimizing blind spots. The specific parameters, derived from config.py, 
-are detailed in the following table.
+The three cameras are placed at a common mounting point on the rear of the vehicle.
+They are positioned to cover three distinct zones: Rear-Left, Rear-Center, and Rear-Right.
+
+Their yaw angles are set to create a wide field of view, minimizing blind spots. 
+The specific parameters, derived from config.py, are detailed in the following table.
 
 | Camera    | Position (X, Y, Z)  | Resolution   | FPS   | FOV (deg)   | Rotation (Pitch, Yaw)   |
 |:----------|:--------------------|:-------------|:------|:------------|:------------------------|
@@ -212,8 +213,8 @@ are detailed in the following table.
 ### Cameras view
 
 The combined output of the three cameras provides the system with a comprehensive view of the area 
-behind the vehicle. The image below (generated during simulation using cv2.imshow) shows 
-the three camera feeds as processed by the perception module. 
+behind the vehicle. The image below shows the three camera feeds as processed by the 
+perception module. 
 These views are what the system uses to detect and track potential hazards.
 
 ![image](../img/view3.png)

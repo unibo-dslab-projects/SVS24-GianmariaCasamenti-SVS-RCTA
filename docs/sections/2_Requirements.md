@@ -21,19 +21,19 @@ safety during reversing maneuvers.
 1) Detect vehicles, pedestrians, and bicycles approaching from the side 
 during reversing maneuvers.
 
-3) Calculate the distance of detected objects from the vehicle
+2) Calculate the distance of detected objects from the vehicle
 
-4) Track objects over time to calculate relative speed and TTC
+3) Track objects over time to calculate relative speed and TTC
 
-5) Generate WARNING alerts when an object is within the distance threshold 
+4) Generate WARNING alerts when an object is within the distance threshold 
 
-6) Generate DANGER level alerts when the TTC is below the critical threshold 
+5) Generate DANGER level alerts when the TTC is below the critical threshold 
 
-7) Monitor three detection zones: rear, left side, right side 
+6) Monitor three detection zones: rear, left side, right side 
 
-8) Publish alert statuses via MQTT protocol 
+7) Publish alert statuses via MQTT protocol 
 
-9) Deactivate the system when the vehicle is not reversing
+8) Deactivate the system when the vehicle is not reversing
 
 ## User requirements
 1) Display graphical alerts on the HMI interface with colored sectors (green/yellow/red)
@@ -45,20 +45,15 @@ during reversing maneuvers.
 ## Not Functional requirements
 1) The system must operate at 20 FPS in the CARLA simulator. 
 
-2) Detection latency must be less than 100 ms. 
+2) Cameras must have a resolution of 416x416 pixels with a FOV of 60°.
 
-4) Cameras must have a resolution of 416x416 pixels with a FOV of 60°.
+3) The system must be modular and easily extensible. 
 
-5) The system must be modular and easily extensible. 
-
-6) The code must be documented and maintainable. 
+4) The code must be documented and maintainable. 
 
 ## Implementation requirements
-1) **Technology**: 
-
-    - Python 3.7, CARLA, YOLOv8, MQTT to develop
-   
-    - Github, GitHub Pages to manage project
+1) **Technology**: Python 3.7, CARLA, YOLOv8, MQTT to develop and 
+Github, GitHub Pages to manage project
    
 2) **Testing**: Implement different test scenarios with vehicles, pedestrians, 
 and bicycles to coverage as much as possible cases
