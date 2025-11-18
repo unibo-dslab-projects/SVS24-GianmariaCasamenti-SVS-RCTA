@@ -210,7 +210,7 @@ identified by YOLO despite the occlusion caused by cars blocking the view.
 
 ## Analysis of results
 
-![Video Result](https://drive.google.com/drive/folders/1lnfjyTRItry3ehBIEFgoYkfPKbvRfLZF?usp=sharing)
+[Video Result](https://drive.google.com/drive/folders/1lnfjyTRItry3ehBIEFgoYkfPKbvRfLZF?usp=sharing)
 
 **TO DO**
 
