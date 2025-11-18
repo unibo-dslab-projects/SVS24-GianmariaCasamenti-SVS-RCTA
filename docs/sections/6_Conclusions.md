@@ -26,7 +26,7 @@ the tracking history is reset.
 
 - Passive Operation: The system is currently designed as a "alert" system only.
 
-## Sviluppi Futuri
+## Future upgrade
 
 To bridge the gap between this prototype and a production-ready safety system, the following enhancements are proposed:
 
