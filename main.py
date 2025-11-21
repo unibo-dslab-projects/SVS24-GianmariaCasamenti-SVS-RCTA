@@ -115,8 +115,12 @@ def main():
 
                 is_reversing = control.reverse
 
+                st = time.time()
                 all_perception_data = perception_system.get_all_perception_data(True)
                 #print({k: v['ttc'] for k, v in all_perception_data.items()})
+                et = time.time()
+                inf_time = et - st
+                print(f"{inf_time}")
 
                 dangerous_objects = decision_maker.evaluate(all_perception_data, True)
                 mqtt_publisher.publish_status(dangerous_objects)
