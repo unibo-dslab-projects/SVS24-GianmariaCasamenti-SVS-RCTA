@@ -58,7 +58,7 @@ def main():
             print("MAIN [Initializing scenario]")
             spawner = Spawner(manager.world, manager.actor_list)
 
-            ego_vehicle = setup_rcta_base_scenario(manager.world, spawner, True, True)
+            ego_vehicle = setup_rcta_base_scenario(manager.world, spawner, True, False)
             if not ego_vehicle:
                 return None
 
@@ -89,7 +89,7 @@ def main():
 
 
             #scenario_vehicle(spawner)
-            #scenario_bicycle(spawner)
+            scenario_bicycle(spawner)
             #scenario_pedestrian_adult(spawner)
             #scenario_pedestrian_child(spawner)
 
