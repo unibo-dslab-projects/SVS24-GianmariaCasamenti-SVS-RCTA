@@ -13,7 +13,7 @@ from scenarios.parking_lot_scenario import (scenario_vehicle,
                                             scenario_pedestrian_child,
                                             setup_rcta_base_scenario)
 
-from rcta_system.rcta_pipeline import RCATPipeline
+from rcta_system.rcta_pipeline import RCTAPipeline
 from hmi.mqtt_publisher import MqttPublisher
 from controller.keyboard_controller import KeyboardController
 
