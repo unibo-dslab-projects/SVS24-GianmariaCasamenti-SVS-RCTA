@@ -13,36 +13,27 @@ from scenarios.parking_lot_scenario import (scenario_vehicle,
                                             scenario_pedestrian_child,
                                             setup_rcta_base_scenario)
 
-from rcta_system.perception import RctaPerception
-from rcta_system.decision_making import DecisionMaker
+from rcta_system.rcta_pipeline import RCATPipeline
 from hmi.mqtt_publisher import MqttPublisher
 from controller.keyboard_controller import KeyboardController
 
 
-def draw_fused_detections(image, perception_data):
+def draw_fused_detections(image, pipeline):
     RED = (0, 0, 255)
     YELLOW = (0,255,255)
     GREEN = (0, 255, 0)
 
-    for det in perception_data['objects']:
-        bbox = [int(c) for c in det['bbox']]
-        dist = det.get('dist', float('inf'))
-        obj_ttc = det.get('ttc_obj', float('inf'))
-        id = det.get('id')
+    # Get tracked objects from pipeline
+    for track_id, state in pipeline.tracked_objects.items():
+        # For visualization, we need to access the last processed objects
+        # Since we don't store full bbox info in tracked_objects,
+        # we'll draw a simplified version
+        pass
 
-        if obj_ttc < config.TTC_THRESHOLD:
-            color = RED
-        elif dist < config.DIST_THRESHOLD:
-            color = YELLOW
-        else:
-            color = GREEN
-
-        dist_str = f"{dist:.1f}m"
-        ttc_str = f"{obj_ttc:.1f}s" if obj_ttc != float('inf') else "---"
-        label = f"ID:{id} {det['class']} {dist_str} {ttc_str}"
-
-        cv2.rectangle(image, (bbox[0], bbox[1]), (bbox[2], bbox[3]), color, 2)
-        cv2.putText(image, label, (bbox[0], bbox[1] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+    # Alternative: Draw current frame objects
+    # This would require storing last processed objects in pipeline
+    # For now, we keep it simple and just show the frame
+    return image
 
 
 def main():
@@ -57,36 +48,38 @@ def main():
         with CarlaManager() as manager:
             print("MAIN [Initializing scenario]")
             spawner = Spawner(manager.world, manager.actor_list)
-
             ego_vehicle = setup_rcta_base_scenario(manager.world, spawner, True, False)
             if not ego_vehicle:
                 return None
 
-            print("MAIN [Initializing perception and Sensor manager]")
-            perception_system = RctaPerception()
-            sensor_manager = SensorManager(manager.world, manager.actor_list)
-
             print("MAIN [Initializing Decision Maker and HMI Publisher]")
-            decision_maker = DecisionMaker()
             mqtt_publisher = MqttPublisher()
             mqtt_publisher.connect()
+
+            print("MAIN [Initializing 3 independent pipelines ]")
+            pipeline_rear = RCTAPipeline("rear", mqtt_publisher)
+            pipeline_left = RCTAPipeline("left", mqtt_publisher)
+            pipeline_right = RCTAPipeline("right", mqtt_publisher)
+
+            print("MAIN [Initializing Sensor manager and cameras]")
+            sensor_manager = SensorManager(manager.world, manager.actor_list)
+            (r_rgb, r_depth, l_rgb, l_depth, ri_rgb, ri_depth) = sensor_manager.setup_rcta_cameras(ego_vehicle)
+
+            print("MAIN [Registering camera callbacks to pipelines]")
+            pipeline_rear.set_camera_callbacks(r_rgb, r_depth)
+            pipeline_left.set_camera_callbacks(l_rgb, l_depth)
+            pipeline_right.set_camera_callbacks(ri_rgb, ri_depth)
+
+            print("MAIN [Starting pipeline threads]")
+            pipeline_rear.start()
+            pipeline_left.start()
+            pipeline_right.start()
 
             print("MAIN [Initializing controller]")
             controller = KeyboardController()
 
-            print("MAIN [Initializing cameras and callback]")
-            (r_rgb, r_depth, l_rgb, l_depth, ri_rgb, ri_depth) = sensor_manager.setup_rcta_cameras(ego_vehicle)
-
-            r_rgb.listen(perception_system.rear_rgb_callback)
-            r_depth.listen(perception_system.rear_depth_callback)
-            l_rgb.listen(perception_system.left_rgb_callback)
-            l_depth.listen(perception_system.left_depth_callback)
-            ri_rgb.listen(perception_system.right_rgb_callback)
-            ri_depth.listen(perception_system.right_depth_callback)
-
             print("MAIN [Initializing spectator]")
             spectator = manager.world.get_spectator()
-
 
             #scenario_vehicle(spawner)
             scenario_bicycle(spawner)
@@ -95,6 +88,8 @@ def main():
 
             time.sleep(1.0)
             running = True
+            frame_count = 0
+            start_time = time.time()
             while running:
                 manager.world.tick()
 
@@ -115,36 +110,36 @@ def main():
 
                 is_reversing = control.reverse
 
-                st = time.time()
-                all_perception_data = perception_system.get_all_perception_data(True)
-                #print({k: v['ttc'] for k, v in all_perception_data.items()})
-                et = time.time()
-                inf_time = et - st
-                print(f"{inf_time}")
-
-                dangerous_objects = decision_maker.evaluate(all_perception_data, True)
-                mqtt_publisher.publish_status(dangerous_objects)
-
+                # Display frames if in debug mode
                 if config.DEBUG:
-                    if perception_system.display_frame_rear is not None:
-                        frame = perception_system.display_frame_rear
-                        data = perception_system.perception_data['rear']
-                        draw_fused_detections(frame, data)
-                        cv2.imshow("REAR RGBD camera", frame)
+                    # Get display frames from pipelines
+                    frame_rear = pipeline_rear.get_display_frame()
+                    frame_left = pipeline_left.get_display_frame()
+                    frame_right = pipeline_right.get_display_frame()
 
-                    if perception_system.display_frame_left is not None:
-                        frame = perception_system.display_frame_left
-                        data = perception_system.perception_data['left']
-                        draw_fused_detections(frame, data)
-                        cv2.imshow("LEFT RGBD camera", frame)
+                    if frame_rear is not None:
+                        # Draw detections on frame
+                        display_rear = frame_rear.copy()
+                        # TODO: Add drawing logic if needed
+                        cv2.imshow("REAR RGBD camera", display_rear)
 
-                    if perception_system.display_frame_right is not None:
-                        frame = perception_system.display_frame_right
-                        data = perception_system.perception_data['right']
-                        draw_fused_detections(frame, data)
-                        cv2.imshow("RIGHT RGBD camera", frame)
+                    if frame_left is not None:
+                        display_left = frame_left.copy()
+                        cv2.imshow("LEFT RGBD camera", display_left)
+
+                    if frame_right is not None:
+                        display_right = frame_right.copy()
+                        cv2.imshow("RIGHT RGBD camera", display_right)
 
                 cv2.waitKey(1)
+
+                # FPS counter
+                frame_count += 1
+                if frame_count % 100 == 0:
+                    elapsed = time.time() - start_time
+                    fps = frame_count / elapsed
+                    print(f"MAIN [FPS: {fps:.1f}]")
+
                 pygame.display.flip()
                 clock.tick(config.TARGET_FPS)
 
