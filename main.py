@@ -108,31 +108,8 @@ def main():
                 control = controller.parse_input(keys)
                 ego_vehicle.apply_control(control)
 
-                is_reversing = control.reverse
-
-                # Display frames if in debug mode
-                if config.DEBUG:
-                    # Get display frames from pipelines
-                    frame_rear = pipeline_rear.get_display_frame()
-                    frame_left = pipeline_left.get_display_frame()
-                    frame_right = pipeline_right.get_display_frame()
-
-                    if frame_rear is not None:
-                        # Draw detections on frame
-                        display_rear = frame_rear.copy()
-                        # TODO: Add drawing logic if needed
-                        cv2.imshow("REAR RGBD camera", display_rear)
-
-                    if frame_left is not None:
-                        display_left = frame_left.copy()
-                        cv2.imshow("LEFT RGBD camera", display_left)
-
-                    if frame_right is not None:
-                        display_right = frame_right.copy()
-                        cv2.imshow("RIGHT RGBD camera", display_right)
-
-                cv2.waitKey(1)
-
+                is_reversing =True
+            
                 # FPS counter
                 frame_count += 1
                 if frame_count % 100 == 0:

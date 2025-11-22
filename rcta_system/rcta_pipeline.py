@@ -248,6 +248,7 @@ class RCTAPipeline(threading.Thread):
 
                 # MQTT publish if there are alerts
                 if dangerous_objects:
+                    print(dangerous_objects)
                     self.mqtt_publisher.publish_status(dangerous_objects)
 
                 # Small sleep to avoid CPU spinning
