@@ -17,25 +17,6 @@ from rcta_system.rcta_pipeline import RCTAPipeline
 from hmi.mqtt_publisher import MqttPublisher
 from controller.keyboard_controller import KeyboardController
 
-
-def draw_fused_detections(image, pipeline):
-    RED = (0, 0, 255)
-    YELLOW = (0,255,255)
-    GREEN = (0, 255, 0)
-
-    # Get tracked objects from pipeline
-    for track_id, state in pipeline.tracked_objects.items():
-        # For visualization, we need to access the last processed objects
-        # Since we don't store full bbox info in tracked_objects,
-        # we'll draw a simplified version
-        pass
-
-    # Alternative: Draw current frame objects
-    # This would require storing last processed objects in pipeline
-    # For now, we keep it simple and just show the frame
-    return image
-
-
 def main():
     pygame.init()
     pygame.display.set_mode((200, 100))
