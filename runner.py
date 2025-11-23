@@ -24,12 +24,10 @@ def main():
 
     try:
         with CarlaManager() as manager:
-            # Configurazione mondo per sincronizzazione
-            settings = manager.world.get_settings()
-            settings.synchronous_mode = True
-            settings.fixed_delta_seconds = 1.0 / 40.0  # 40 FPS come nel notebook
-            manager.world.apply_settings(settings)
-
+            # MODALITÀ ASINCRONA (come nel notebook originale)
+            # Non impostiamo synchronous_mode, quindi rimane False (default)
+            # La simulazione CARLA gira in modo indipendente
+            
             print("MAIN [Initializing scenario]")
             spawner = Spawner(manager.world, manager.actor_list)
             ego_vehicle = setup_rcta_base_scenario(manager.world, spawner, True, False)
@@ -57,9 +55,9 @@ def main():
             start_time = time.time()
 
             while running:
-                # Tick del mondo sincronizzato
-                manager.world.tick()
-
+                # NESSUN world.tick() in modalità asincrona!
+                # Il simulatore avanza automaticamente
+                
                 # Aggiorna posizione spectator (visuale aerea dietro il veicolo)
                 ego_transform = ego_vehicle.get_transform()
                 spectator_location = (
@@ -92,9 +90,9 @@ def main():
                     fps = frame_count / elapsed
                     print(f"MAIN [FPS: {fps:.1f}]")
 
-                # Mantieni il framerate
+                # Mantieni il framerate del loop Python (non del simulatore!)
                 pygame.display.flip()
-                clock.tick(40)  # 40 FPS come nel notebook
+                clock.tick(40)  # 40 FPS per il loop Python
 
     except KeyboardInterrupt:
         print("\nMAIN [Script interrupted from keyboard]")
@@ -103,14 +101,6 @@ def main():
         import traceback
         traceback.print_exc()
     finally:
-        # Ripristina modalità asincrona prima di uscire
-        try:
-            settings = manager.world.get_settings()
-            settings.synchronous_mode = False
-            manager.world.apply_settings(settings)
-        except:
-            pass
-
         pygame.quit()
         print("MAIN [Cleanup completed]")
 
