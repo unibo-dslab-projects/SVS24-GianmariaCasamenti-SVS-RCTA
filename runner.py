@@ -2,25 +2,15 @@ import carla
 import time
 import cv2
 import pygame
-import config
 
 from carla_bridge.carla_manager import CarlaManager
 from carla_bridge.spawner import Spawner
 from carla_bridge.sensor_manager import SensorManager
 from scenarios.parking_lot_scenario import (setup_rcta_base_scenario,
-                                            scenario_vehicle,
-                                            scenario_bicycle,
-                                            scenario_pedestrian_adult,
-                                            scenario_pedestrian_child)
+                                            scenario_bicycle)
 from controller.keyboard_controller import KeyboardController
 
-# Import RCTA callbacks
-from rcta_callbacks import (sync_and_callback,
-                            rear_zone_status,
-                            left_zone_status,
-                            right_zone_status,
-                            rcta_system_active,
-                            vehicle_in_reverse)
+from rcta_system.rcta_callbacks import sync_and_callback
 
 
 def main():
@@ -51,11 +41,7 @@ def main():
             sensor_manager = SensorManager(manager.world, manager.actor_list)
             (r_rgb, r_depth, l_rgb, l_depth, ri_rgb, ri_depth) = sensor_manager.setup_rcta_cameras(ego_vehicle)
 
-            # ============================================
-            # REGISTER CALLBACKS (following notebook pattern)
-            # ============================================
             print("MAIN [Registering RCTA callbacks]")
-
             # REAR zone callbacks
             r_rgb.listen(lambda image: sync_and_callback("rear", "rgb", image))
             r_depth.listen(lambda image: sync_and_callback("rear", "depth", image))
@@ -82,13 +68,11 @@ def main():
             time.sleep(2.0)
 
             print("MAIN [Starting main loop - ASYNC MODE]")
+            print("MAIN [Callbacks will run automatically on sensor data]")
+            print("MAIN [Main loop handles: keyboard input + spectator camera]")
             running = True
 
-            # Frame counter for periodic status display
-            frame_count = 0
-
             while running:
-
                 # Handle pygame events
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
@@ -111,7 +95,8 @@ def main():
 
                 pygame.display.flip()
 
-                clock.tick(40)
+                # Run at 30 FPS (callbacks run independently)
+                clock.tick(30)
 
     except KeyboardInterrupt:
         print("\nMAIN [Script interrupted from keyboard]")

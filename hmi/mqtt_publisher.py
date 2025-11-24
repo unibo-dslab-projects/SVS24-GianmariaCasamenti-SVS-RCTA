@@ -1,81 +1,142 @@
+# mqtt_publisher.py
+"""
+MQTT Publisher for RCTA system.
+Publishes alerts to MQTT broker when dangerous objects are detected.
+"""
+
 import paho.mqtt.client as mqtt
 import json
-import config
+import time
+import sys
+import os
+
+# Import config
+script_dir = os.path.dirname(__file__)
+project_root = os.path.abspath(os.path.join(script_dir, '..'))
+sys.path.append(project_root)
+
+try:
+    import config
+except ImportError:
+    print("MQTT_PUBLISHER [ERROR: Config not found, using defaults]")
 
 
-class MqttPublisher:
+    # Fallback config
+    class config:
+        MQTT_BROKER = "localhost"
+        MQTT_PORT = 1883
+        MQTT_TOPIC_ALERTS = "rcta/alerts"
+
+
+class MQTTPublisher:
     """
-    Manage the connection to MQTT broker and publish data.
+    MQTT Publisher for RCTA alerts.
+    Thread-safe, asynchronous publishing.
     """
-    def __init__(self, broker_address=config.MQTT_BROKER, port=config.MQTT_PORT):
-        self.broker_address = broker_address
-        self.port = port
-        self.topic = config.MQTT_TOPIC_ALERTS
 
+    def __init__(self):
+        """Initialize MQTT client and connect to broker"""
         self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
         self.client.on_connect = self._on_connect
         self.client.on_disconnect = self._on_disconnect
 
-        self.is_connected = False
+        self.connected = False
+        self.broker = config.MQTT_BROKER
+        self.port = config.MQTT_PORT
+        self.topic = config.MQTT_TOPIC_ALERTS
+
+        # Try to connect
+        try:
+            self.client.connect(self.broker, self.port, 60)
+            self.client.loop_start()  # Start background thread
+            print(f"MQTT_PUBLISHER [Connecting to {self.broker}:{self.port}...]")
+        except Exception as e:
+            print(f"MQTT_PUBLISHER [ERROR: Could not connect to broker: {e}]")
+            print(f"MQTT_PUBLISHER [Will continue without MQTT]")
 
     def _on_connect(self, client, userdata, flags, reason_code, properties):
+        """Callback when connected to broker"""
         if reason_code == 0:
-            print(f"HMI_PUBLISHER [Connected to the broker {self.broker_address}]")
-            self.is_connected = True
+            self.connected = True
+            print(f"MQTT_PUBLISHER [Connected successfully to {self.broker}]")
         else:
-            print(f"HMI_PUBLISHER [Connection failed: {reason_code}]")
+            print(f"MQTT_PUBLISHER [Connection failed: {reason_code}]")
 
-    def _on_disconnect(self, client, userdata, flags, reason_code, properties):
-        self.is_connected = False
-        if reason_code != 0:
-            print(f"HMI_PUBLISHER [Unexpected error: {reason_code}")
-        else:
-            print("HMI_PUBLISHER [Disconnected to the broker]")
+    def _on_disconnect(self, client, userdata, reason_code, properties):
+        """Callback when disconnected from broker"""
+        self.connected = False
+        print(f"MQTT_PUBLISHER [Disconnected: {reason_code}]")
 
-    def connect(self):
-        """Try to connect to the broker."""
-        try:
-            print(f"HMI_PUBLISHER [connection attempt  {self.broker_address}:{self.port}]")
-            self.client.connect(self.broker_address, self.port, 60)
-            self.client.loop_start()  # Gestisce la riconnessione e il traffico in background
-        except ConnectionRefusedError:
-            print(f"HMI_PUBLISHER [ERROR: Rejected connection to broker {self.broker_address}]")
-        except Exception as e:
-            print(f"HMI_PUBLISHER [ERROR: Impossible to connect: {e}]")
-
-    def disconnect(self):
-        """Disconnect from the broker."""
-        self.client.loop_stop()
-        self.client.disconnect()
-
-    def publish_status(self, dangerous_objects_list):
+    def publish_alerts(self, dangerous_objects):
         """
-        Publish status to MQTT broker (alert or safe).
-        :param dangerous_objects_list: List of dangerous objects.
+        Publish list of dangerous objects as MQTT message.
+
+        Args:
+            dangerous_objects: List of dicts with alert information
+                [
+                    {
+                        "zone": "rear",
+                        "alert_level": "danger",
+                        "class": "car",
+                        "distance": 8.5,
+                        "ttc": 2.3
+                    },
+                    ...
+                ]
         """
-        if not self.is_connected:
-            # Non tentare di pubblicare se non siamo connessi
+        if not self.connected:
+            # Not connected, skip publishing (but don't block)
             return
 
-        if dangerous_objects_list:
-            payload = {
-                "alert": True,
-                "objects": dangerous_objects_list
-            }
-        else:
-            payload = {
-                "alert": False,
-                "objects": []
-            }
+        if not dangerous_objects:
+            # No alerts, skip
+            return
 
-        payload_str = json.dumps(payload)
-        result = self.client.publish(self.topic, payload_str)
+        # Prepare MQTT message
+        message = {
+            "alert": True,
+            "timestamp": time.time(),
+            "objects": dangerous_objects
+        }
 
-        #Debug
-        if result[0] != 0:
-            print(f"HMI_PUBLISHER [Publishing error: {result[0]}]")
-        # else:
-        #     if payload['alert']:
-        #         print(f"HMI Publisher: Messaggio di ALLARME pubblicato.")
-        #     else:
-        #         print(f"HMI Publisher: Messaggio 'Libero' pubblicato.")
+        # Publish (non-blocking, async)
+        try:
+            result = self.client.publish(
+                self.topic,
+                json.dumps(message),
+                qos=1  # At least once delivery
+            )
+
+            if result.rc == mqtt.MQTT_ERR_SUCCESS:
+                pass  # Success, no need to log every message
+            else:
+                print(f"MQTT_PUBLISHER [ERROR: Publish failed with code {result.rc}]")
+
+        except Exception as e:
+            print(f"MQTT_PUBLISHER [ERROR: {e}]")
+
+    def publish_safe_status(self):
+        """
+        Publish a "safe" status message (no alerts).
+        Optional - can be used to send periodic heartbeat.
+        """
+        if not self.connected:
+            return
+
+        message = {
+            "alert": False,
+            "timestamp": time.time(),
+            "objects": []
+        }
+
+        try:
+            self.client.publish(self.topic, json.dumps(message), qos=0)
+        except Exception as e:
+            print(f"MQTT_PUBLISHER [ERROR: {e}]")
+
+    def disconnect(self):
+        """Disconnect from MQTT broker gracefully"""
+        if self.connected:
+            self.client.loop_stop()
+            self.client.disconnect()
+            print("MQTT_PUBLISHER [Disconnected]")

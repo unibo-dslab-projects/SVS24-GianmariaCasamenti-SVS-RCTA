@@ -101,3 +101,4 @@ DEBUG = False
 
 # True = asincrono (più stile notebook), False = sincrono (originale)
 ASYNC_MODE = True
+
