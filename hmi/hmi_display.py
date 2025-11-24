@@ -224,7 +224,7 @@ def main():
         draw_labels(screen, (cx, cy), sectors_config, font_class, font_data)
 
         pygame.display.flip()
-        clock.tick(config.TARGET_FPS)
+        clock.tick(40)
 
     client.loop_stop()
     client.disconnect()
