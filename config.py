@@ -101,11 +101,3 @@ DEBUG = False
 
 # True = asincrono (più stile notebook), False = sincrono (originale)
 ASYNC_MODE = True
-
-# Target FPS per il main loop (usato con clock.tick())
-TARGET_FPS = 20  # Deve corrispondere a 1/fixed_delta_seconds se sincrono
-DELTA_SECONDS = 0.05
-# Sensor tick per le camere (in secondi)
-# 0.0 = aggiorna ogni tick, >0.0 = aggiorna ogni N secondi
-SENSOR_TICK = 0.0  # Imposta a 0.05 per 20 Hz se vuoi rate ridotto
-# ================================================
