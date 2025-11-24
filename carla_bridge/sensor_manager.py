@@ -5,8 +5,9 @@ import config
 class SensorManager:
     """
     Manages camera sensors for RCTA system.
-    In async mode, sensors update at their natural rate.
+    Sensors use sensor_tick to control update frequency.
     """
+
     def __init__(self, world, actor_list):
         self.world = world
         self.actor_list = actor_list
@@ -16,18 +17,25 @@ class SensorManager:
         """
         Setup RGB and Depth cameras for RCTA (Rear Cross Traffic Alert).
         Creates 3 pairs of cameras: REAR, LEFT, RIGHT.
+
+        Each camera runs at 5 FPS (sensor_tick=0.2s) to balance:
+        - Detection accuracy (sufficient for RCTA)
+        - GPU load (3×YOLO inference at 5 FPS = 15 inference/sec)
+        - System responsiveness
         """
         # RGB camera blueprint
         rgb_camera_bp = self.blueprint_library.find('sensor.camera.rgb')
         rgb_camera_bp.set_attribute('image_size_x', str(config.CAMERA_IMAGE_WIDTH))
         rgb_camera_bp.set_attribute('image_size_y', str(config.CAMERA_IMAGE_HEIGHT))
         rgb_camera_bp.set_attribute('fov', config.CAMERA_FOV)
+        rgb_camera_bp.set_attribute('sensor_tick','0.5')
 
         # Depth camera blueprint
         depth_camera_bp = self.blueprint_library.find('sensor.camera.depth')
         depth_camera_bp.set_attribute('image_size_x', str(config.CAMERA_IMAGE_WIDTH))
         depth_camera_bp.set_attribute('image_size_y', str(config.CAMERA_IMAGE_HEIGHT))
         depth_camera_bp.set_attribute('fov', config.CAMERA_FOV)
+        depth_camera_bp.set_attribute('sensor_tick', '0.5')
 
         # Spawn REAR cameras
         print("SENSOR_MANAGER [Spawning REAR cameras]")
@@ -43,7 +51,7 @@ class SensorManager:
         )
         if rear_rgb_cam and rear_depth_cam:
             self.actor_list.extend([rear_rgb_cam, rear_depth_cam])
-            print(f"SENSOR_MANAGER [REAR cameras spawned successfully]")
+            print(f"SENSOR_MANAGER [REAR cameras spawned ]")
         else:
             print(f"SENSOR_MANAGER [ERROR: REAR cameras spawn failed]")
 
@@ -61,7 +69,7 @@ class SensorManager:
         )
         if left_rgb_cam and left_depth_cam:
             self.actor_list.extend([left_rgb_cam, left_depth_cam])
-            print(f"SENSOR_MANAGER [LEFT cameras spawned successfully]")
+            print(f"SENSOR_MANAGER [LEFT cameras spawned]")
         else:
             print(f"SENSOR_MANAGER [ERROR: LEFT cameras spawn failed]")
 
@@ -79,7 +87,7 @@ class SensorManager:
         )
         if right_rgb_cam and right_depth_cam:
             self.actor_list.extend([right_rgb_cam, right_depth_cam])
-            print(f"SENSOR_MANAGER [RIGHT cameras spawned successfully]")
+            print(f"SENSOR_MANAGER [RIGHT cameras spawned]")
         else:
             print(f"SENSOR_MANAGER [ERROR: RIGHT cameras spawn failed]")
 

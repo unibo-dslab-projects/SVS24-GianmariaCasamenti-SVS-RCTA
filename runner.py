@@ -6,12 +6,21 @@ import config
 
 from carla_bridge.carla_manager import CarlaManager
 from carla_bridge.spawner import Spawner
+from carla_bridge.sensor_manager import SensorManager
 from scenarios.parking_lot_scenario import (setup_rcta_base_scenario,
                                             scenario_vehicle,
                                             scenario_bicycle,
                                             scenario_pedestrian_adult,
                                             scenario_pedestrian_child)
 from controller.keyboard_controller import KeyboardController
+
+# Import RCTA callbacks
+from rcta_callbacks import (sync_and_callback,
+                            rear_zone_status,
+                            left_zone_status,
+                            right_zone_status,
+                            rcta_system_active,
+                            vehicle_in_reverse)
 
 
 def main():
@@ -38,6 +47,30 @@ def main():
             print("MAIN [Initializing spectator camera]")
             spectator = manager.world.get_spectator()
 
+            print("MAIN [Initializing Sensor manager and cameras]")
+            sensor_manager = SensorManager(manager.world, manager.actor_list)
+            (r_rgb, r_depth, l_rgb, l_depth, ri_rgb, ri_depth) = sensor_manager.setup_rcta_cameras(ego_vehicle)
+
+            # ============================================
+            # REGISTER CALLBACKS (following notebook pattern)
+            # ============================================
+            print("MAIN [Registering RCTA callbacks]")
+
+            # REAR zone callbacks
+            r_rgb.listen(lambda image: sync_and_callback("rear", "rgb", image))
+            r_depth.listen(lambda image: sync_and_callback("rear", "depth", image))
+            print("MAIN [REAR callbacks registered]")
+
+            # LEFT zone callbacks
+            l_rgb.listen(lambda image: sync_and_callback("left", "rgb", image))
+            l_depth.listen(lambda image: sync_and_callback("left", "depth", image))
+            print("MAIN [LEFT callbacks registered]")
+
+            # RIGHT zone callbacks
+            ri_rgb.listen(lambda image: sync_and_callback("right", "rgb", image))
+            ri_depth.listen(lambda image: sync_and_callback("right", "depth", image))
+            print("MAIN [RIGHT callbacks registered]")
+
             # Spawn scenario actors
             # scenario_vehicle(spawner)
             scenario_bicycle(spawner)
@@ -45,10 +78,14 @@ def main():
             # scenario_pedestrian_child(spawner)
 
             # Wait for everything to be ready
-            time.sleep(1.0)
+            print("MAIN [Waiting for sensors to initialize...]")
+            time.sleep(2.0)
 
             print("MAIN [Starting main loop - ASYNC MODE]")
             running = True
+
+            # Frame counter for periodic status display
+            frame_count = 0
 
             while running:
 
