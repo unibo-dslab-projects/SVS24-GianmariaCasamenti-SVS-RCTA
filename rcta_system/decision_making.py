@@ -9,54 +9,42 @@ class DecisionMaker:
         print(
             f"DECISION_MAKER-{zone_name.upper()} [Initialized with TTC={self.ttc_threshold}s, DIST={self.dist_threshold}m]")
 
-    def evaluate(self, perception_data):
+    def evaluate(self, fused_objects):
+        if not fused_objects:
+            return []
+
         dangerous_objects_list = []
 
-        # Check TTC threshold (DANGER)
-        if perception_data['ttc'] < self.ttc_threshold:
-            # Find object with minimum TTC
-            dangerous_obj = min(
-                perception_data['objects'],
-                key=lambda obj: obj.get('ttc_obj', float('inf')),
-                default=None
-            )
+        # oggetto con TTC minimo
+        min_ttc_obj = min(
+            fused_objects,
+            key=lambda obj: obj.get('ttc_obj', float('inf'))
+        )
 
-            if dangerous_obj:
-                dangerous_objects_list.append({
-                    "zone": self.zone_name,
-                    "alert_level": "danger",
-                    "class": dangerous_obj['class'],
-                    "distance": dangerous_obj['dist'],
-                    "ttc": dangerous_obj['ttc_obj']
-                })
-            else:
-                # Fallback: fast untracked object
-                dangerous_objects_list.append({
-                    "zone": self.zone_name,
-                    "alert_level": "danger",
-                    "class": "FAST",
-                    "distance": perception_data['dist'],
-                    "ttc": perception_data['ttc']
-                })
+        # Check DANGER (TTC)
+        if min_ttc_obj['ttc_obj'] < self.ttc_threshold:
+            dangerous_objects_list.append({
+                "zone": self.zone_name,
+                "alert_level": "danger",
+                "class": min_ttc_obj['class'],
+                "distance": min_ttc_obj['dist'],
+                "ttc": min_ttc_obj['ttc_obj']
+            })
+            return dangerous_objects_list
 
-            return dangerous_objects_list  # Return immediately, skip warning check
+        # Check distanza
+        min_dist_obj = min(
+            fused_objects,
+            key=lambda obj: obj.get('dist', float('inf'))
+        )
 
-        # Check distance threshold (WARNING)
-        if perception_data['dist'] < self.dist_threshold:
-            # Find closest object
-            closest_obj = min(
-                perception_data['objects'],
-                key=lambda obj: obj.get('dist', float('inf')),
-                default=None
-            )
-
-            if closest_obj:
-                dangerous_objects_list.append({
-                    "zone": self.zone_name,
-                    "alert_level": "warning",
-                    "class": closest_obj['class'],
-                    "distance": closest_obj['dist'],
-                    "ttc": float('inf')
-                })
+        if min_dist_obj['dist'] < self.dist_threshold:
+            dangerous_objects_list.append({
+                "zone": self.zone_name,
+                "alert_level": "warning",
+                "class": min_dist_obj['class'],
+                "distance": min_dist_obj['dist'],
+                "ttc": min_dist_obj['ttc_obj']
+            })
 
         return dangerous_objects_list

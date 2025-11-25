@@ -114,20 +114,3 @@ class Perception:
 
         for track_id in stale_ids:
             del tracked_objects[track_id]
-
-    def extract_zone_status(self, fused_objects):
-        if not fused_objects:
-            return {
-                'dist': float('inf'),
-                'ttc': float('inf'),
-                'objects': []
-            }
-
-        min_dist = min((obj['dist'] for obj in fused_objects), default=float('inf'))
-        min_ttc = min((obj['ttc_obj'] for obj in fused_objects), default=float('inf'))
-
-        return {
-            'dist': min_dist,
-            'ttc': min_ttc,
-            'objects': fused_objects
-        }
