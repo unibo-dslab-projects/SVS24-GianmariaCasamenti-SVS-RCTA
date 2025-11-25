@@ -14,13 +14,30 @@ Interface (HMI). This high-level architecture is depicted in the block diagram b
 
 ```mermaid
 graph LR
-    A[CARLA Simulator] --> B1[Rear RGBD]
-    A --> B2[Left RGBD]
-    A --> B3[Right RGBD]
-    B1 & B2 & B3 --> C[Perception Module<br/>YOLO + Depth Fusion]
-    C --> D[Decision Making<br/>TTC & Distance Check]
-    D --> E[MQTT Broker]
-    E --> F[HMI Display<br/>Visual Alerts]
+    subgraph CARLA["CARLA Simulator"]
+        S1[Rear RGB + Depth]
+        S2[Left RGB + Depth]
+        S3[Right RGB + Depth]
+    end
+
+    subgraph REAR["Rear Pipeline"]
+        P1[YOLO Detection] --> F1[Depth Fusion] --> T1[Tracking + TTC] --> D1[Decision Making]
+    end
+
+    subgraph LEFT["Left Pipeline"]
+        P2[YOLO Detection] --> F2[Depth Fusion] --> T2[Tracking + TTC] --> D2[Decision Making]
+    end
+
+    subgraph RIGHT["Right Pipeline"]
+        P3[YOLO Detection] --> F3[Depth Fusion] --> T3[Tracking + TTC] --> D3[Decision Making]
+    end
+
+    S1 --> P1
+    S2 --> P2
+    S3 --> P3
+
+    D1 & D2 & D3 --> MQTT[(MQTT Broker)]
+    MQTT --> HMI[HMI Display]
 ```
 
 ## Sensor configuration

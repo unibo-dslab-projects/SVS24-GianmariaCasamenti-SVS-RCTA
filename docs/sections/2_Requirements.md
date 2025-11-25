@@ -43,7 +43,7 @@ during reversing maneuvers.
 3) Control the ego vehicle via keyboard during simulation 
 
 ## Not Functional requirements
-1) The system must operate at 20 FPS in the CARLA simulator. 
+1) The system must operate at 40 FPS in the CARLA simulator. 
 
 2) Cameras must have a resolution of 416x416 pixels with a FOV of 60°.
 
@@ -57,8 +57,3 @@ Github, GitHub Pages to manage project
    
 2) **Testing**: Implement different test scenarios with vehicles, pedestrians, 
 and bicycles to coverage as much as possible cases
-
-## Optional requirements
-1) Support for asynchronous and synchronous simulation modes.
-
-2) Debug mode to display windows with all tracked object.
