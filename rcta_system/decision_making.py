@@ -30,6 +30,7 @@ class DecisionMaker:
                 "distance": min_ttc_obj['dist'],
                 "ttc": min_ttc_obj['ttc_obj']
             })
+            print(f"[ALERT] {min_ttc_obj}")
             return dangerous_objects_list
 
         # Check distanza
