@@ -4,6 +4,7 @@ import paho.mqtt.client as mqtt
 import json
 import sys
 import os
+import time
 
 script_dir = os.path.dirname(__file__)
 project_root = os.path.abspath(os.path.join(script_dir, '..'))
@@ -30,14 +31,13 @@ TEXT_BG_COLOR = (0, 0, 0, 160)  # Sfondo semi-trasparente per leggibilità
 
 CAR_ICON_PATH = os.path.join(project_root, "hmi", "car-top.png")
 
-# --- MODIFICA STATO GLOBALE ---
 radar_data = {
     'left': {'state': 'SAFE', 'label': '', 'dist': float('inf'), 'ttc': float('inf')},
     'rear': {'state': 'SAFE', 'label': '', 'dist': float('inf'), 'ttc': float('inf')},
     'right': {'state': 'SAFE', 'label': '', 'dist': float('inf'), 'ttc': float('inf')}
 }
 
-
+last_update = 0.0
 
 def _on_connect(client, userdata, flags, reason_code, propertie):
     if reason_code == 0:
@@ -49,7 +49,7 @@ def _on_connect(client, userdata, flags, reason_code, propertie):
 
 
 def _on_message(client, userdata, msg):
-    global radar_data
+    global radar_data, last_update
     try:
         payload = msg.payload.decode()
         data = json.loads(payload)
@@ -85,12 +85,12 @@ def _on_message(client, userdata, msg):
                         new_data[side] = {'state': 'WARNING', 'label': label, 'dist': dist, 'ttc': ttc}
 
         radar_data = new_data
+        last_update = time.time()
 
     except json.JSONDecodeError:
         print(f"HMI_GRAPHICS [Invalid JSON: {msg.payload}]")
     except Exception as e:
         print(f"HMI_GRAPHICS [Error processing message: {e}]")
-
 
 def draw_sector(surface, center, start_angle, end_angle, radius, color):
     """Disegna un settore circolare."""
@@ -146,7 +146,7 @@ def draw_labels(surface, center, sectors_config, font_class, font_data):
         surface.blit(surf_data, rect_data)
 
 def main():
-    global radar_data  # Assicurati che usi radar_data
+    global radar_data, last_update
 
     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
     client.on_connect = _on_connect
@@ -187,7 +187,6 @@ def main():
 
         screen.fill(BG_COLOR)
 
-
         sectors_config = {
             'left': {'start': 180, 'end': 240, **radar_data['left']},
             'rear': {'start': 240, 'end': 300, **radar_data['rear']},
@@ -198,19 +197,19 @@ def main():
         for side, data in sectors_config.items():
             state = data['state']
             color = COLOR_SAFE
-
             if state == 'WARNING':
                 color = COLOR_WARNING
             elif state == 'DANGER':
                 color = COLOR_DANGER
-
             draw_sector(screen, (cx, cy), data['start'], data['end'], 180, color)
 
-        #
         img_rect = car_img.get_rect(center=(cx, cy-60))
         screen.blit(car_img, img_rect)
-
         draw_labels(screen, (cx, cy), sectors_config, font_class, font_data)
+
+        if time.time() - last_update > 1.0:
+            #resettare
+            print("resettttt")
 
         pygame.display.flip()
         clock.tick(40)

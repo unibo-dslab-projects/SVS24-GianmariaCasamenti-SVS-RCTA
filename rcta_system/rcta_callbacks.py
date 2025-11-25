@@ -46,6 +46,7 @@ def rear_zone_callback(rgb_image, depth_image):
         print(f"REAR_CALLBACK [ALERT] {dangerous_objects}")
 
 
+
 def left_zone_callback(rgb_image, depth_image):
     if not rcta_system_active:
         return
@@ -98,6 +99,7 @@ def right_zone_callback(rgb_image, depth_image):
     if dangerous_objects:
         mqtt_publisher.publish_alerts(dangerous_objects)
         print(f"RIGHT_CALLBACK [ALERT] {dangerous_objects}")
+
 
 def update_vehicle_state(vehicle):
     global rcta_system_active

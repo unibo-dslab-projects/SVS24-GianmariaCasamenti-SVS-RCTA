@@ -15,13 +15,6 @@ except ImportError:
     print("MQTT_PUBLISHER [ERROR: Config not found, using defaults]")
 
 
-    # Fallback config
-    class config:
-        MQTT_BROKER = "localhost"
-        MQTT_PORT = 1883
-        MQTT_TOPIC_ALERTS = "rcta/alerts"
-
-
 class MQTTPublisher:
     def __init__(self):
         self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
@@ -84,23 +77,7 @@ class MQTTPublisher:
         except Exception as e:
             print(f"MQTT_PUBLISHER [ERROR: {e}]")
 
-    def publish_safe_status(self):
-        if not self.connected:
-            return
-
-        message = {
-            "alert": False,
-            "timestamp": time.time(),
-            "objects": []
-        }
-
-        try:
-            self.client.publish(self.topic, json.dumps(message), qos=0)
-        except Exception as e:
-            print(f"MQTT_PUBLISHER [ERROR: {e}]")
-
     def disconnect(self):
-        """Disconnect from MQTT broker gracefully"""
         if self.connected:
             self.client.loop_stop()
             self.client.disconnect()
