@@ -10,7 +10,8 @@ from scenarios.parking_lot_scenario import (setup_rcta_base_scenario,
                                             scenario_bicycle)
 from controller.keyboard_controller import KeyboardController
 
-from rcta_system.rcta_callbacks import sync_and_callback
+from rcta_system.rcta_callbacks import sync_and_callback, update_vehicle_state
+
 
 
 def main():
@@ -78,6 +79,7 @@ def main():
                 keys = pygame.key.get_pressed()
                 control = controller.parse_input(keys)
                 ego_vehicle.apply_control(control)
+                update_vehicle_state(ego_vehicle)
 
                 # Update spectator camera position
                 ego_transform = ego_vehicle.get_transform()

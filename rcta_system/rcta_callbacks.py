@@ -17,41 +17,14 @@ mqtt_publisher = MQTTPublisher()
 
 print("RCTA_CALLBACKS [Initialized: Perception, DecisionMakers, MQTT Publisher]")
 
-# Zone status dictionaries
-rear_zone_status = {
-    "vehicles_detected": 0,
-    "closest_distance": None,
-    "threat_level": "none",
-    "alert_active": False,
-    "time_to_collision": None,
-    "last_update": 0.0
-}
-
-left_zone_status = {
-    "vehicles_detected": 0,
-    "closest_distance": None,
-    "threat_level": "none",
-    "alert_active": False,
-    "time_to_collision": None,
-    "last_update": 0.0
-}
-
-right_zone_status = {
-    "vehicles_detected": 0,
-    "closest_distance": None,
-    "threat_level": "none",
-    "alert_active": False,
-    "time_to_collision": None,
-    "last_update": 0.0
-}
 
 # System state
 rcta_system_active = False
-vehicle_in_reverse = False
 
 
 def rear_zone_callback(rgb_image, depth_image):
-    global rear_zone_status
+    if not rcta_system_active:
+        return
 
     rgb_np = perception.to_numpy_rgb(rgb_image)
     depth_meters = perception.to_depth_meters(depth_image)
@@ -72,16 +45,10 @@ def rear_zone_callback(rgb_image, depth_image):
         mqtt_publisher.publish_alerts(dangerous_objects)
         print(f"REAR_CALLBACK [ALERT] {dangerous_objects}")
 
-    rear_zone_status["vehicles_detected"] = len(fused_objects)
-    rear_zone_status["closest_distance"] = perception_data['dist']
-    rear_zone_status["time_to_collision"] = perception_data['ttc']
-    rear_zone_status["alert_active"] = len(dangerous_objects) > 0
-    rear_zone_status["threat_level"] = dangerous_objects[0]["alert_level"] if dangerous_objects else "none"
-    rear_zone_status["last_update"] = timestamp
-
 
 def left_zone_callback(rgb_image, depth_image):
-    global left_zone_status
+    if not rcta_system_active:
+        return
 
     rgb_np = perception.to_numpy_rgb(rgb_image)
     depth_meters = perception.to_depth_meters(depth_image)
@@ -103,18 +70,11 @@ def left_zone_callback(rgb_image, depth_image):
         mqtt_publisher.publish_alerts(dangerous_objects)
         print(f"LEFT_CALLBACK [ALERT] {dangerous_objects}")
 
-    left_zone_status["vehicles_detected"] = len(fused_objects)
-    left_zone_status["closest_distance"] = perception_data['dist']
-    left_zone_status["time_to_collision"] = perception_data['ttc']
-    left_zone_status["alert_active"] = len(dangerous_objects) > 0
-    left_zone_status["threat_level"] = dangerous_objects[0]["alert_level"] if dangerous_objects else "none"
-    left_zone_status["last_update"] = timestamp
 
 
 def right_zone_callback(rgb_image, depth_image):
-    global right_zone_status
-
-    st = time.time()
+    if not rcta_system_active:
+        return
 
     rgb_np = perception.to_numpy_rgb(rgb_image)
     depth_meters = perception.to_depth_meters(depth_image)
@@ -137,18 +97,12 @@ def right_zone_callback(rgb_image, depth_image):
     # MQTT Notification
     if dangerous_objects:
         mqtt_publisher.publish_alerts(dangerous_objects)
-        #print(f"RIGHT_CALLBACK [ALERT] {dangerous_objects}")
+        print(f"RIGHT_CALLBACK [ALERT] {dangerous_objects}")
 
-    # Update Global State
-    right_zone_status["vehicles_detected"] = len(fused_objects)
-    right_zone_status["closest_distance"] = perception_data['dist']
-    right_zone_status["time_to_collision"] = perception_data['ttc']
-    right_zone_status["alert_active"] = len(dangerous_objects) > 0
-    right_zone_status["threat_level"] = dangerous_objects[0]["alert_level"] if dangerous_objects else "none"
-    right_zone_status["last_update"] = timestamp
-
-    print(time.time()-st)
-
+def update_vehicle_state(vehicle):
+    global rcta_system_active
+    control = vehicle.get_control()
+    rcta_system_active = control.reverse
 
 # Temporary storage for synchronizing RGB + Depth
 rear_rgb_data = None
@@ -169,7 +123,6 @@ def sync_and_callback(zone, sensor_type, image):
 
 
     if zone == "rear":
-        st = time.time()
         if sensor_type == "rgb":
             rear_rgb_data = image
             # If depth is already available, call callback
@@ -187,8 +140,6 @@ def sync_and_callback(zone, sensor_type, image):
                 # Reset after processing
                 rear_rgb_data = None
                 rear_depth_data = None
-
-        print(time.time() - st)
 
     elif zone == "left":
         if sensor_type == "rgb":
@@ -219,8 +170,6 @@ def sync_and_callback(zone, sensor_type, image):
                 right_zone_callback(right_rgb_data, right_depth_data)
                 right_rgb_data = None
                 right_depth_data = None
-
-
 
     else:
         print(f"SYNC_ERROR [Unknown zone: {zone}]")

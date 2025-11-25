@@ -5,7 +5,6 @@ import json
 import sys
 import os
 
-# --- CONFIGURAZIONE PATH ---
 script_dir = os.path.dirname(__file__)
 project_root = os.path.abspath(os.path.join(script_dir, '..'))
 sys.path.append(project_root)
@@ -15,7 +14,7 @@ except ImportError:
     print("HMI_DISPLAY [ERROR: Config not found]")
     sys.exit(1)
 
-# --- COSTANTI GRAFICHE ---
+
 SCREEN_WIDTH = 420
 SCREEN_HEIGHT = 420
 BG_COLOR = (30, 30, 30)  # grigio
@@ -25,15 +24,13 @@ COLOR_SAFE = (50, 200, 50, 100)  # verde trasparente
 COLOR_WARNING = (255, 200, 0, 180)  # Giallo semi-opaco
 COLOR_DANGER = (255, 0, 0, 200)
 
-# --- NUOVE COSTANTI TESTO ---
 TEXT_COLOR = (255, 255, 255)
-TEXT_DANGER_COLOR = (255, 180, 180)  # Rosso chiaro per TTC
+TEXT_DANGER_COLOR = (255, 180, 180)
 TEXT_BG_COLOR = (0, 0, 0, 160)  # Sfondo semi-trasparente per leggibilità
 
 CAR_ICON_PATH = os.path.join(project_root, "hmi", "car-top.png")
 
 # --- MODIFICA STATO GLOBALE ---
-# Ora memorizziamo lo stato completo per ogni settore
 radar_data = {
     'left': {'state': 'SAFE', 'label': '', 'dist': float('inf'), 'ttc': float('inf')},
     'rear': {'state': 'SAFE', 'label': '', 'dist': float('inf'), 'ttc': float('inf')},
@@ -43,9 +40,6 @@ radar_data = {
 
 
 def _on_connect(client, userdata, flags, reason_code, propertie):
-    """
-    Callback when a connection is established.
-    """
     if reason_code == 0:
         print(f"HMI_DISPLAY [Connected to the broker {config.MQTT_BROKER}]")
         client.subscribe(config.MQTT_TOPIC_ALERTS)
@@ -55,11 +49,7 @@ def _on_connect(client, userdata, flags, reason_code, propertie):
 
 
 def _on_message(client, userdata, msg):
-    """
-    Callback when a message is received.
-    --- VERSIONE CORRETTA E AGGIORNATA ---
-    """
-    global radar_data  # Usiamo la variabile globale corretta
+    global radar_data
     try:
         payload = msg.payload.decode()
         data = json.loads(payload)
@@ -94,7 +84,6 @@ def _on_message(client, userdata, msg):
                     if dist < new_data[side]['dist']:
                         new_data[side] = {'state': 'WARNING', 'label': label, 'dist': dist, 'ttc': ttc}
 
-        # --- FIX BUG: Aggiorna lo stato globale ---
         radar_data = new_data
 
     except json.JSONDecodeError:
