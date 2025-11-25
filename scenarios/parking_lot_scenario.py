@@ -1,7 +1,7 @@
 import carla
 import random
 import config
-
+import threading
 
 def setup_rcta_base_scenario(world, spawner, blocking_cars=True, bad_weather=False):
     # Spawn ego vehicle
@@ -52,7 +52,12 @@ def scenario_vehicle(spawner):
     if not target_vehicle:
         print("ERROR: car not spawned.")
 
-    target_vehicle.set_target_velocity(config.TARGET_VELOCITY)
+    def start_movement():
+        target_vehicle.set_target_velocity(config.TARGET_VELOCITY)
+        print("[SCENARIO] Car started moving")
+
+    timer = threading.Timer(4.0, start_movement)
+    timer.start()
 
 def scenario_bicycle(spawner):
     print(f"[SCENARIO] Spawning scenario 2")
