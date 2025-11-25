@@ -83,7 +83,7 @@ def rear_zone_callback(rgb_image, depth_image):
     """
     if dangerous_objects:
         mqtt_publisher.publish_alerts(dangerous_objects)
-        print(f"REAR_CALLBACK [ALERT] {dangerous_objects}")
+        #print(f"REAR_CALLBACK [ALERT] {dangerous_objects}")
 
 
 def left_zone_callback(rgb_image, depth_image):
@@ -107,7 +107,7 @@ def left_zone_callback(rgb_image, depth_image):
 
     if dangerous_objects:
         mqtt_publisher.publish_alerts(dangerous_objects)
-        print(f"LEFT_CALLBACK [ALERT] {dangerous_objects}")
+        #print(f"LEFT_CALLBACK [ALERT] {dangerous_objects}")
 
 
 def right_zone_callback(rgb_image, depth_image):
@@ -132,7 +132,7 @@ def right_zone_callback(rgb_image, depth_image):
     # MQTT Notification
     if dangerous_objects:
         mqtt_publisher.publish_alerts(dangerous_objects)
-        print(f"RIGHT_CALLBACK [ALERT] {dangerous_objects}")
+        #print(f"RIGHT_CALLBACK [ALERT] {dangerous_objects}")
 
 
 def update_vehicle_state(vehicle):

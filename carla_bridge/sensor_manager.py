@@ -14,28 +14,19 @@ class SensorManager:
         self.blueprint_library = world.get_blueprint_library()
 
     def setup_rcta_cameras(self, parent_vehicle):
-        """
-        Setup RGB and Depth cameras for RCTA (Rear Cross Traffic Alert).
-        Creates 3 pairs of cameras: REAR, LEFT, RIGHT.
-
-        Each camera runs at 5 FPS (sensor_tick=0.2s) to balance:
-        - Detection accuracy (sufficient for RCTA)
-        - GPU load (3×YOLO inference at 5 FPS = 15 inference/sec)
-        - System responsiveness
-        """
         # RGB camera blueprint
         rgb_camera_bp = self.blueprint_library.find('sensor.camera.rgb')
         rgb_camera_bp.set_attribute('image_size_x', str(config.CAMERA_IMAGE_WIDTH))
         rgb_camera_bp.set_attribute('image_size_y', str(config.CAMERA_IMAGE_HEIGHT))
         rgb_camera_bp.set_attribute('fov', config.CAMERA_FOV)
-        rgb_camera_bp.set_attribute('sensor_tick','0.7')
+        rgb_camera_bp.set_attribute('sensor_tick','0.5')
 
         # Depth camera blueprint
         depth_camera_bp = self.blueprint_library.find('sensor.camera.depth')
         depth_camera_bp.set_attribute('image_size_x', str(config.CAMERA_IMAGE_WIDTH))
         depth_camera_bp.set_attribute('image_size_y', str(config.CAMERA_IMAGE_HEIGHT))
         depth_camera_bp.set_attribute('fov', config.CAMERA_FOV)
-        depth_camera_bp.set_attribute('sensor_tick', '0.7')
+        depth_camera_bp.set_attribute('sensor_tick', '0.5')
 
         # Spawn REAR cameras
         print("SENSOR_MANAGER [Spawning REAR cameras]")

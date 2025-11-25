@@ -68,7 +68,7 @@ PEDESTRIAN_SPAWN_TRANSFORM = carla.Transform(
     carla.Rotation(yaw =270)
 )
 
-PEDESTRIAN_DESTINATION = carla.Location(x=-31.5, y=-37.0, z=0.5)
+PEDESTRIAN_DESTINATION = carla.Location(x=-33.5, y=-37.0, z=0.5)
 PEDESTRIAN_WALK_SPEED = 1.39  # 5 km/h = 1.39 m/s
 PEDESTRIAN_CHILD_WALK_SPEED = 2.0  # 7 km/h
 

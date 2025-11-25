@@ -57,7 +57,7 @@ class Spawner:
 
         self.actor_list.append(controller)
 
-        time.sleep(0.1)
+        self.world.wait_for_tick()
 
         controller.start()
         controller.go_to_location(destination)

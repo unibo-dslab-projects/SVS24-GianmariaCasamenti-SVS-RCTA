@@ -60,10 +60,10 @@ def main():
             print("MAIN [RIGHT callbacks registered]")
 
             #Differents SCENARIOs
-            # scenario_vehicle(spawner)
+            #scenario_vehicle(spawner)
             scenario_bicycle(spawner)
-            # scenario_pedestrian_adult(spawner)
-            # scenario_pedestrian_child(spawner)
+            #scenario_pedestrian_adult(spawner)
+            #scenario_pedestrian_child(spawner)
             time.sleep(2.0)
 
             print("MAIN [Starting loop]")
@@ -74,6 +74,9 @@ def main():
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         running = False
+
+                manager.world.wait_for_tick()
+
 
                 # Get keyboard input and apply control
                 keys = pygame.key.get_pressed()
