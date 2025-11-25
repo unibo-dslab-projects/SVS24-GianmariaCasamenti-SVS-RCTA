@@ -2,16 +2,7 @@ import config
 
 
 class DecisionMaker:
-    """
-    Decision maker for a single RCTA zone.
-    Each pipeline has its own DecisionMaker instance.
-    """
-
     def __init__(self, zone_name):
-        """
-        Args:
-            zone_name: "rear", "left", or "right"
-        """
         self.zone_name = zone_name
         self.ttc_threshold = config.TTC_THRESHOLD
         self.dist_threshold = config.DIST_THRESHOLD
@@ -19,15 +10,6 @@ class DecisionMaker:
             f"DECISION_MAKER-{zone_name.upper()} [Initialized with TTC={self.ttc_threshold}s, DIST={self.dist_threshold}m]")
 
     def evaluate(self, perception_data):
-        """
-        Evaluate perception data for this zone and return alerts if needed.
-
-        Args:
-            perception_data: Dict with 'dist', 'ttc', 'objects'
-
-        Returns:
-            List of dangerous objects (empty if safe)
-        """
         dangerous_objects_list = []
 
         # Check TTC threshold (DANGER)

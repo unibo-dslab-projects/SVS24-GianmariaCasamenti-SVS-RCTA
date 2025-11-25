@@ -97,8 +97,5 @@ YOLO_MODEL_PATH = 'models/yolov8n.pt'
 #_____________________________________RCTA SETTING________________________
 TTC_THRESHOLD = 3.5 #secondi
 DIST_THRESHOLD = 2.5 #metri
-DEBUG = False
 
-# True = asincrono (più stile notebook), False = sincrono (originale)
-ASYNC_MODE = True
 

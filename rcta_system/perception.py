@@ -1,9 +1,3 @@
-# perception.py
-"""
-Perception module for RCTA system.
-Handles image processing, object detection, tracking, and TTC calculation.
-"""
-
 import numpy as np
 import numba
 import time
@@ -12,15 +6,6 @@ from rcta_system.object_detector import ObjectDetector
 
 @numba.jit(nopython=True, fastmath=True)
 def _decode_depth_to_meters(array_uint8):
-    """
-    Fast depth decoding using Numba JIT compilation.
-
-    Args:
-        array_uint8: Raw depth image as uint8 array (H, W, 4)
-
-    Returns:
-        Depth map in meters as float32 array (H, W)
-    """
     h, w, _ = array_uint8.shape
     depth_meters = np.empty((h, w), dtype=np.float32)
     inv_max_val = 1.0 / (256.0 * 256.0 * 256.0 - 1.0)
@@ -37,11 +22,6 @@ def _decode_depth_to_meters(array_uint8):
 
 
 class Perception:
-    """
-    Perception system for RCTA.
-    Manages object detection, tracking, and TTC calculation for all three zones.
-    """
-
     def __init__(self):
         """Initialize perception system with detectors for each zone"""
         print("PERCEPTION [Initializing YOLO detectors for all zones]")
@@ -68,44 +48,16 @@ class Perception:
         print("PERCEPTION [Initialized successfully]")
 
     def to_numpy_rgb(self, carla_img):
-        """
-        Convert CARLA RGB image to numpy array.
-
-        Args:
-            carla_img: CARLA camera image
-
-        Returns:
-            RGB numpy array (H, W, 3)
-        """
         array = np.frombuffer(carla_img.raw_data, dtype=np.uint8)
         array = np.reshape(array, (carla_img.height, carla_img.width, 4))
         return array[:, :, :3]  # Remove alpha channel
 
     def to_depth_meters(self, carla_img):
-        """
-        Convert CARLA depth image to meters.
-
-        Args:
-            carla_img: CARLA depth camera image
-
-        Returns:
-            Depth map in meters as float32 array (H, W)
-        """
         array_uint8 = np.frombuffer(carla_img.raw_data, dtype=np.uint8)
         array_uint8 = np.reshape(array_uint8, (carla_img.height, carla_img.width, 4))
         return _decode_depth_to_meters(array_uint8)
 
     def fuse_results(self, detections, depth_map):
-        """
-        Fuse YOLO detections with depth map to get distance.
-
-        Args:
-            detections: List of YOLO detections
-            depth_map: Depth map in meters (H, W)
-
-        Returns:
-            List of detections with distance information added
-        """
         h, w = depth_map.shape
         fused = []
 
@@ -130,14 +82,6 @@ class Perception:
         return fused
 
     def update_tracks_and_calc_ttc(self, current_objects, current_time, tracked_objects):
-        """
-        Update object tracking and calculate TTC (Time To Collision).
-
-        Args:
-            current_objects: List of current frame detections with distance
-            current_time: Current timestamp
-            tracked_objects: Dictionary of tracked objects for this zone
-        """
         for obj in current_objects:
             track_id = obj['id']
 
@@ -163,13 +107,6 @@ class Perception:
             }
 
     def cleanup_stale_tracks(self, current_time, tracked_objects):
-        """
-        Remove objects that haven't been seen for too long.
-
-        Args:
-            current_time: Current timestamp
-            tracked_objects: Dictionary of tracked objects for this zone
-        """
         stale_ids = [
             track_id for track_id, state in tracked_objects.items()
             if current_time - state['time'] > self.STALE_TRACK_THRESHOLD_SEC
@@ -178,19 +115,8 @@ class Perception:
         for track_id in stale_ids:
             del tracked_objects[track_id]
 
-        if stale_ids:
-            print(f"PERCEPTION [Cleaned {len(stale_ids)} stale tracks]")
 
     def extract_zone_status(self, fused_objects):
-        """
-        Extract minimum distance and TTC from fused objects.
-
-        Args:
-            fused_objects: List of objects with dist and ttc_obj
-
-        Returns:
-            Dict with 'dist', 'ttc', 'objects'
-        """
         if not fused_objects:
             return {
                 'dist': float('inf'),

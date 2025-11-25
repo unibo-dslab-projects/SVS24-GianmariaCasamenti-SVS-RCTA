@@ -1,9 +1,3 @@
-# mqtt_publisher.py
-"""
-MQTT Publisher for RCTA system.
-Publishes alerts to MQTT broker when dangerous objects are detected.
-"""
-
 import paho.mqtt.client as mqtt
 import json
 import time
@@ -29,13 +23,7 @@ except ImportError:
 
 
 class MQTTPublisher:
-    """
-    MQTT Publisher for RCTA alerts.
-    Thread-safe, asynchronous publishing.
-    """
-
     def __init__(self):
-        """Initialize MQTT client and connect to broker"""
         self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
         self.client.on_connect = self._on_connect
         self.client.on_disconnect = self._on_disconnect
@@ -52,10 +40,8 @@ class MQTTPublisher:
             print(f"MQTT_PUBLISHER [Connecting to {self.broker}:{self.port}...]")
         except Exception as e:
             print(f"MQTT_PUBLISHER [ERROR: Could not connect to broker: {e}]")
-            print(f"MQTT_PUBLISHER [Will continue without MQTT]")
 
     def _on_connect(self, client, userdata, flags, reason_code, properties):
-        """Callback when connected to broker"""
         if reason_code == 0:
             self.connected = True
             print(f"MQTT_PUBLISHER [Connected successfully to {self.broker}]")
@@ -63,27 +49,10 @@ class MQTTPublisher:
             print(f"MQTT_PUBLISHER [Connection failed: {reason_code}]")
 
     def _on_disconnect(self, client, userdata, reason_code, properties):
-        """Callback when disconnected from broker"""
         self.connected = False
         print(f"MQTT_PUBLISHER [Disconnected: {reason_code}]")
 
     def publish_alerts(self, dangerous_objects):
-        """
-        Publish list of dangerous objects as MQTT message.
-
-        Args:
-            dangerous_objects: List of dicts with alert information
-                [
-                    {
-                        "zone": "rear",
-                        "alert_level": "danger",
-                        "class": "car",
-                        "distance": 8.5,
-                        "ttc": 2.3
-                    },
-                    ...
-                ]
-        """
         if not self.connected:
             # Not connected, skip publishing (but don't block)
             return
@@ -116,10 +85,6 @@ class MQTTPublisher:
             print(f"MQTT_PUBLISHER [ERROR: {e}]")
 
     def publish_safe_status(self):
-        """
-        Publish a "safe" status message (no alerts).
-        Optional - can be used to send periodic heartbeat.
-        """
         if not self.connected:
             return
 
