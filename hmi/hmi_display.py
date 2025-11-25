@@ -32,12 +32,12 @@ TEXT_BG_COLOR = (0, 0, 0, 160)  # Sfondo semi-trasparente per leggibilità
 CAR_ICON_PATH = os.path.join(project_root, "hmi", "car-top.png")
 
 radar_data = {
-    'left': {'state': 'SAFE', 'label': '', 'dist': float('inf'), 'ttc': float('inf')},
-    'rear': {'state': 'SAFE', 'label': '', 'dist': float('inf'), 'ttc': float('inf')},
-    'right': {'state': 'SAFE', 'label': '', 'dist': float('inf'), 'ttc': float('inf')}
+    'left': {'state': 'SAFE', 'label': '', 'dist': float('inf'), 'ttc': float('inf'), 'last_seen': 0.0},
+    'rear': {'state': 'SAFE', 'label': '', 'dist': float('inf'), 'ttc': float('inf'), 'last_seen': 0.0},
+    'right': {'state': 'SAFE', 'label': '', 'dist': float('inf'), 'ttc': float('inf'), 'last_seen': 0.0}
 }
 
-last_update = 0.0
+ZONE_TIMEOUT_SEC = 1.0
 
 def _on_connect(client, userdata, flags, reason_code, propertie):
     if reason_code == 0:
@@ -48,43 +48,46 @@ def _on_connect(client, userdata, flags, reason_code, propertie):
         print(f"HMI_DISPLAY [Connection failed {reason_code}]")
 
 def _on_message(client, userdata, msg):
-    global radar_data, last_update
+    global radar_data
     try:
         payload = msg.payload.decode()
         data = json.loads(payload)
 
-        # Reset
-        new_data = {
-            'left': {'state': 'SAFE', 'label': '', 'dist': float('inf'), 'ttc': float('inf')},
-            'rear': {'state': 'SAFE', 'label': '', 'dist': float('inf'), 'ttc': float('inf')},
-            'right': {'state': 'SAFE', 'label': '', 'dist': float('inf'), 'ttc': float('inf')}
-        }
+        current_time = time.time()
 
         if data.get("alert") is True:
             for obj in data.get("objects", []):
-                side = obj.get("zone")
-                if not side: continue
+                zone = obj.get("zone")
+                if zone not in radar_data:
+                    continue
 
                 level = obj.get("alert_level")
                 label = obj.get("class", "???").upper()
                 dist = obj.get("distance", float('inf'))
                 ttc = obj.get("ttc", float('inf'))
 
-                current_state = new_data[side]['state']
+                current_state = radar_data[zone]['state']
 
                 # Priorità: Danger > Warning > (più vicino)
                 if level == "danger":
-                    # Sovrascrivi sempre con DANGER
-                    new_data[side] = {'state': 'DANGER', 'label': "FAST!" if label == "FAST" else label, 'dist': dist,
-                                      'ttc': ttc}
+                    radar_data[zone] = {
+                        'state': 'DANGER',
+                        'label': label,
+                        'dist': dist,
+                        'ttc': ttc,
+                        'last_seen': current_time
+                    }
 
                 elif level == "warning" and current_state != 'DANGER':
                     # Applica WARNING solo se non è DANGER e se è l'oggetto più vicino
-                    if dist < new_data[side]['dist']:
-                        new_data[side] = {'state': 'WARNING', 'label': label, 'dist': dist, 'ttc': ttc}
-
-        radar_data = new_data
-        last_update = time.time()
+                    if dist < radar_data[zone]['dist']:
+                        radar_data[zone] = {
+                            'state': 'WARNING',
+                            'label': label,
+                            'dist': dist,
+                            'ttc': ttc,
+                            'last_seen': current_time
+                        }
 
     except json.JSONDecodeError:
         print(f"HMI_GRAPHICS [Invalid JSON: {msg.payload}]")
@@ -142,6 +145,19 @@ def draw_labels(surface, center, sectors_config, font_class, font_data):
         surface.blit(surf_class, rect_class)
         surface.blit(surf_data, rect_data)
 
+def check_zone_timeouts():
+    current_time = time.time()
+    for zone in radar_data:
+        if radar_data[zone]['state'] != 'SAFE':
+            if current_time - radar_data[zone]['last_seen'] > ZONE_TIMEOUT_SEC:
+                radar_data[zone] = {
+                    'state': 'SAFE',
+                    'label': '',
+                    'dist': float('inf'),
+                    'ttc': float('inf'),
+                    'last_seen': 0.0
+                }
+
 def main():
     global radar_data, last_update
 
@@ -182,6 +198,8 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
 
+        check_zone_timeouts()
+
         screen.fill(BG_COLOR)
 
         sectors_config = {
@@ -203,14 +221,6 @@ def main():
         img_rect = car_img.get_rect(center=(cx, cy-60))
         screen.blit(car_img, img_rect)
         draw_labels(screen, (cx, cy), sectors_config, font_class, font_data)
-
-        if time.time() - last_update > 1.0:
-            radar_data = {
-                'left': {'state': 'SAFE', 'label': '', 'dist': float('inf'), 'ttc': float('inf')},
-                'rear': {'state': 'SAFE', 'label': '', 'dist': float('inf'), 'ttc': float('inf')},
-                'right': {'state': 'SAFE', 'label': '', 'dist': float('inf'), 'ttc': float('inf')}
-            }
-            last_update = time.time()
 
         pygame.display.flip()
         clock.tick(40)
