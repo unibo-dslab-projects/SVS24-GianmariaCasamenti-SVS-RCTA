@@ -47,7 +47,6 @@ def _on_connect(client, userdata, flags, reason_code, propertie):
     else:
         print(f"HMI_DISPLAY [Connection failed {reason_code}]")
 
-
 def _on_message(client, userdata, msg):
     global radar_data, last_update
     try:
@@ -93,7 +92,6 @@ def _on_message(client, userdata, msg):
         print(f"HMI_GRAPHICS [Error processing message: {e}]")
 
 def draw_sector(surface, center, start_angle, end_angle, radius, color):
-    """Disegna un settore circolare."""
     points = [center]
     steps = 30
     for i in range(steps + 1):
@@ -107,7 +105,6 @@ def draw_sector(surface, center, start_angle, end_angle, radius, color):
     surface.blit(sector_surf, (0, 0))
 
 def draw_labels(surface, center, sectors_config, font_class, font_data):
-    """Disegna le etichette sui settori."""
     for side, data in sectors_config.items():
         if data['state'] == 'SAFE':
             continue
@@ -160,7 +157,7 @@ def main():
 
     # --- Setup Pygame e FONT ---
     pygame.init()
-    pygame.font.init()  # Inizializza il modulo font
+    pygame.font.init()
     font_class = pygame.font.SysFont('Arial', 20, bold=True)
     font_data = pygame.font.SysFont('Arial', 15)
 
@@ -208,12 +205,12 @@ def main():
         draw_labels(screen, (cx, cy), sectors_config, font_class, font_data)
 
         if time.time() - last_update > 1.0:
-            #resettare
             radar_data = {
                 'left': {'state': 'SAFE', 'label': '', 'dist': float('inf'), 'ttc': float('inf')},
                 'rear': {'state': 'SAFE', 'label': '', 'dist': float('inf'), 'ttc': float('inf')},
                 'right': {'state': 'SAFE', 'label': '', 'dist': float('inf'), 'ttc': float('inf')}
             }
+            last_update = time.time()
 
         pygame.display.flip()
         clock.tick(40)
