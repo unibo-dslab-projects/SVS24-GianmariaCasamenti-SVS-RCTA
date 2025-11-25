@@ -6,11 +6,14 @@ import pygame
 from carla_bridge.carla_manager import CarlaManager
 from carla_bridge.spawner import Spawner
 from carla_bridge.sensor_manager import SensorManager
-from scenarios.parking_lot_scenario import (setup_rcta_base_scenario,
-                                            scenario_bicycle)
 from controller.keyboard_controller import KeyboardController
-
 from rcta_system.rcta_callbacks import sync_and_callback, update_vehicle_state
+from scenarios.parking_lot_scenario import (setup_rcta_base_scenario,
+                                            scenario_bicycle,
+                                            scenario_pedestrian_adult,
+                                            scenario_vehicle,
+                                            scenario_pedestrian_child)
+
 
 
 
@@ -23,8 +26,6 @@ def main():
     try:
         with CarlaManager() as manager:
             print("MAIN [Initializing scenario]")
-
-            # Spawn ego vehicle and scenario
             spawner = Spawner(manager.world, manager.actor_list)
             ego_vehicle = setup_rcta_base_scenario(manager.world, spawner, True, False)
 
@@ -58,12 +59,11 @@ def main():
             ri_depth.listen(lambda image: sync_and_callback("right", "depth", image))
             print("MAIN [RIGHT callbacks registered]")
 
-            # Spawn scenario actors
+            #Differents SCENARIOs
             # scenario_vehicle(spawner)
             scenario_bicycle(spawner)
             # scenario_pedestrian_adult(spawner)
             # scenario_pedestrian_child(spawner)
-
             time.sleep(2.0)
 
             print("MAIN [Starting loop]")

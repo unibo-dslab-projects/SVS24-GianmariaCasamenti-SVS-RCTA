@@ -209,7 +209,11 @@ def main():
 
         if time.time() - last_update > 1.0:
             #resettare
-            print("resettttt")
+            radar_data = {
+                'left': {'state': 'SAFE', 'label': '', 'dist': float('inf'), 'ttc': float('inf')},
+                'rear': {'state': 'SAFE', 'label': '', 'dist': float('inf'), 'ttc': float('inf')},
+                'right': {'state': 'SAFE', 'label': '', 'dist': float('inf'), 'ttc': float('inf')}
+            }
 
         pygame.display.flip()
         clock.tick(40)

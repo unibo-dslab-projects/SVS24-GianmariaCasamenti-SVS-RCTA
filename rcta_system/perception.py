@@ -115,7 +115,6 @@ class Perception:
         for track_id in stale_ids:
             del tracked_objects[track_id]
 
-
     def extract_zone_status(self, fused_objects):
         if not fused_objects:
             return {
