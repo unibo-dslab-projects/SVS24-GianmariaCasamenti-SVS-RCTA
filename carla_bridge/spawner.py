@@ -1,5 +1,6 @@
 import carla
 import random
+import time
 
 
 class Spawner:
@@ -55,6 +56,8 @@ class Spawner:
             return None, None
 
         self.actor_list.append(controller)
+
+        time.sleep(0.1)
 
         controller.start()
         controller.go_to_location(destination)
