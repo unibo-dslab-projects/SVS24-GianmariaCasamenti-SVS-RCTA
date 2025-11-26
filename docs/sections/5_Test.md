@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Test
+title: Test & Result
 nav_order: 7
 ---
 
@@ -31,7 +31,7 @@ This represents a medium-speed target with a smaller radar/visual cross-section.
 
 - **Pedestrian Adult**: An adult pedestrian walks across the path at 5 km/h.
 
-- **Pedestrian Child**: A child pedestrian model crosses at 10. 
+- **Pedestrian Child**: A child pedestrian model crosses at 10 km/h. 
 This is the most critical scenario due to the target's small size and potential to be 
 completely obscured by the blocking vehicles.
 

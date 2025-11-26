@@ -8,7 +8,7 @@ nav_order: 3
 
 ## Architecture overview
 
-The RCTA system is designed with a modular architecture, which is orchestrated by the main simulation script (main.py). 
+The RCTA system is designed with a modular architecture, which is orchestrated by the main simulation script. 
 The data flows from the CARLA simulator's sensors through perception, decision-making, and finally to the Human-Machine 
 Interface (HMI). This high-level architecture is depicted in the block diagram below.
 
