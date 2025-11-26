@@ -60,13 +60,15 @@ alert is necessary.
 
 ### Evaluation Logic
 The core logic resides in the evaluate method of the DecisionMaker class.
-As a preliminary check, it verifies if the ego vehicle is currently reversing. 
-If the vehicle is not in reverse, the system suppresses all alerts and returns an 
-empty list.
-
-Instead, the system iterates through the data from all three zones 
-(left, rear, right) and applies a two-tier threshold logic to
-generate alerts:
+The system works with fused objects to find the detection with:
+```
+fused_objects = [
+    {'id': 3, 'class': 'bicycle', 'confidence': 0.82, 'bbox': [120, 200, 280, 450], 'dist': 5.2, 'ttc_obj': 3.25},
+    {'id': 5, 'class': 'car', 'confidence': 0.89, 'bbox': [130, 210, 290, 460], 'dist': 8.2, 'ttc_obj': 7.00}, 
+    .
+    .
+]
+```
 
 - Danger Level (TTC): If an object's projected Time-to-Collision is 
 lower than the TTC_THRESHOLD, the system triggers a "danger" alert. 
@@ -83,11 +85,11 @@ The structure ensures the HMI receives all necessary context:
 
 ```
 {
-    "zone": "rear",          # The detection zone (left/rear/right)
-    "alert_level": "danger", # Priority level
-    "class": "car",          # Object type
-    "distance": 4.5,         # Current distance in meters
-    "ttc": 1.2               # Time to collision in seconds
+        'zone': 'left',
+        'alert_level': 'danger',
+        'class': 'bicycle',
+        'distance': 5.2,
+        'ttc': 3.25
 }
 ```
 
@@ -108,42 +110,18 @@ The primary function is ```publish_status(dangerous_objects_list)```.
 This method receives the list of threats directly from the DecisionMaker module. 
 It then constructs a JSON payload to be sent to the MQTT_TOPIC_ALERTS topic.
 
-The payload format is binary, based on whether any threats are present:
-
-- If no threats are found (the list is empty), it publishes a "safe" message:
-
-```JSON
-{"alert": false, "objects": []}
-```
-
-- If threats are detected, it publishes an "alert" message containing the list of dangerous objects:
-
-```JSON
-{"alert": true, "objects": [...]}
-```
-
-The objects list contains detailed dictionaries for each object, including its zone, alert_level, class, distance, and ttc.
-
 ### HMI Display
 
 The hmi_display.py script is a standalone Pygame application that functions as the 
 MQTT client for the driver's interface. It runs as a completely separate process 
-from the main CARLA simulation. It initializes its own MQTT client and subscribes
-to the same MQTT_TOPIC_ALERTS topic, listening for the JSON messages published by
-the MqttPublisher.
+from the main CARLA simulation. 
+
+It initializes its own MQTT client and subscribes to the same MQTT_TOPIC_ALERTS 
+topic, listening for the JSON messages published by the MqttPublisher.
 
 ![image](../img/hmi.png)
 
 Message Callback (_on_message) When a new message arrives from the broker,
 the _on_message callback function is triggered. This function is responsible 
-for parsing the incoming JSON payload.
-
-- It first creates a new_data dictionary, resetting all zones to 'SAFE' by default.
-
-- If the payload's "alert" key is True, it iterates through the "objects" list.
-
-- For each object, it updates the corresponding zone (left, rear, or right) in new_data with its state (alert level), label (class), dist, and ttc.
-
-- The logic correctly prioritizes 'DANGER' over 'WARNING'.
-
-- Finally, it atomically updates the global radar_data variable, which the main Pygame loop uses for drawing.
+for parsing the incoming JSON payload drawing the specific zone with the 
+right alert Danger (red) or Warning (yellow).

@@ -23,15 +23,15 @@ testing the system's reaction time and field of view.
 We implemented four distinct dynamic scenarios, defined in ```parking_lot_scenario.py```, 
 to cover different target sizes and speeds:
 
-- **Vehicle Crossing**: A target vehicle crosses behind the VUT at 15 km/h. 
+- **Vehicle Crossing**: A target vehicle crosses behind the VUT at 20 km/h. 
 This tests the system's ability to track large, fast-moving objects.
 
-- **Cyclist Crossing**: An adult cyclist crosses at speeds of 10 km/h . 
+- **Cyclist Crossing**: An adult cyclist crosses at speeds of 15 km/h . 
 This represents a medium-speed target with a smaller radar/visual cross-section.
 
 - **Pedestrian Adult**: An adult pedestrian walks across the path at 5 km/h.
 
-- **Pedestrian Child**: A child pedestrian model crosses at 7. 
+- **Pedestrian Child**: A child pedestrian model crosses at 10. 
 This is the most critical scenario due to the target's small size and potential to be 
 completely obscured by the blocking vehicles.
 
@@ -200,23 +200,25 @@ the RGB camera's visibility and the depth camera's clarity, simulating a worst-c
 
 ## Evaluation Metrics 
 
-The main quantitative parameter for evaluation is the time to collision (TTC) at the moment of the first alarm.
+The main **quantitative parameter** for evaluation is the time to collision (TTC) at the moment of the first alarm.
 According to the reference study, an effective RCTA system must activate an alarm when the TTC is greater than
-1.7 seconds. Our system uses a more conservative safety threshold of 3.5 seconds to ensure 
-an adequate safety margin.
+1.7 seconds. 
+Our system uses a more conservative safety threshold of 3.5 seconds to ensure an adequate safety margin.
 
-Another qualitative parameter is detection accuracy: it checks whether the specific class has been correctly
+Another **qualitative parameter** is detection accuracy: it checks whether the specific class has been correctly
 identified by YOLO despite the occlusion caused by cars blocking the view.
 
 ## Analysis of results
 
 [Video Result](https://drive.google.com/drive/folders/1lnfjyTRItry3ehBIEFgoYkfPKbvRfLZF?usp=sharing)
 
-**TO DO**
 
-- Impatto Meteo Avverso: 
-Il meteo avverso non ha ridotto l'accuratezza di YOLO o la precisione della mappa di profondità
+| Scenario          | Distance to VUT (m) | Velocity (km/h) | First TTC alert (s) | First TTC alert - bad weather (s) |
+|-------------------|---------------------|-----------------|---------------------|-----------------------------------|
+| Car               | 15                  | 20              |                     |                                   |
+| Bike              | 15                  | 15              |                     |                                   |
+| Adult pedestrian  | 5                   | 5               |                     |                                   |
+| Child pedestrian  | 5                   | 10              |                     |                                   |
 
-- Come si è comportato il sistema quando l'attore era parzialmente nascosto dalle blocking_cars?
 
 

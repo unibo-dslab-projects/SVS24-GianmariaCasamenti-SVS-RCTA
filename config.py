@@ -49,7 +49,7 @@ TARGET_SPAWN_TRANSFORM = carla.Transform(
     carla.Location(x=-35.0, y=-13.0, z=0.5),
     carla.Rotation(yaw=270)
 )
-TARGET_VELOCITY= carla.Vector3D(x=0, y=-3.56, z=0)  # 20 km/h = 5.56 m/s
+TARGET_VELOCITY= carla.Vector3D(x=0, y=-5.56, z=0)  # 20 km/h = 5.56 m/s
 
 #scenario2
 BICYCLE_MODEL = 'vehicle.diamondback.century'
@@ -58,7 +58,7 @@ BICYCLE_SPAWN_TRANSFORM = carla.Transform(
     carla.Location(x=-35.0, y=-13.0, z=0.5),
     carla.Rotation(yaw=270)
 )
-BICYCLE_VELOCITY= carla.Vector3D(x=0, y=-2.78, z=0)  # 10 km/h = 2.78 m/s
+BICYCLE_VELOCITY= carla.Vector3D(x=0, y=-4.1, z=0)  # 15 km/h = 4.1 m/s
 
 #scenario 3 and 4
 PEDESTRIAN_MODEL = 'walker.pedestrian.0038'
@@ -70,11 +70,11 @@ PEDESTRIAN_SPAWN_TRANSFORM = carla.Transform(
 
 PEDESTRIAN_DESTINATION = carla.Location(x=-33.5, y=-37.0, z=0.5)
 PEDESTRIAN_WALK_SPEED = 1.39  # 5 km/h = 1.39 m/s
-PEDESTRIAN_CHILD_WALK_SPEED = 2.0  # 7 km/h
+PEDESTRIAN_CHILD_WALK_SPEED = 2.7  # 10 km/h
 
 #_____________________________________CAMERAS SETTING________________________
-CAMERA_IMAGE_WIDTH = 416 #640
-CAMERA_IMAGE_HEIGHT = 416 #384
+CAMERA_IMAGE_WIDTH = 416
+CAMERA_IMAGE_HEIGHT = 416
 CAMERA_FOV = "60"
 COMMON_REAR_LOCATION = carla.Location(x=-2.0, y=0.0, z=0.9)
 #FOV 60° centrato a 180° -> Copre da 150° a 210°

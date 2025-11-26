@@ -15,7 +15,6 @@ def setup_rcta_base_scenario(world, spawner, blocking_cars=True, bad_weather=Fal
         print(f"[ERROR] Failed to spawn ego vehicle")
         return None
 
-    # Spawn blocking vehicles se richiesto
     spawned_blockers = 0
     if blocking_cars:
         for transform in config.BLOCKING_VEHICLE_TRANSFORMS:
@@ -39,7 +38,6 @@ def setup_rcta_base_scenario(world, spawner, blocking_cars=True, bad_weather=Fal
         weather = carla.WeatherParameters.ClearNoon
         world.set_weather(weather)
     return ego_vehicle
-
 
 def scenario_vehicle(spawner):
     print(f"[SCENARIO] Spawning scenario 1")
@@ -70,7 +68,12 @@ def scenario_bicycle(spawner):
     if not bicycle:
         print("ERROR: target_vehicle not spawned.")
 
-    bicycle.set_target_velocity(config.BICYCLE_VELOCITY)
+    def start_movement():
+        bicycle.set_target_velocity(config.BICYCLE_VELOCITY)
+        print("[SCENARIO] Bike started moving")
+
+    timer = threading.Timer(4.0, start_movement)
+    timer.start()
 
 def scenario_pedestrian_adult(spawner):
     print(f"[SCENARIO] Spawning scenario 3")
@@ -84,8 +87,6 @@ def scenario_pedestrian_adult(spawner):
 
     if not pedestrian:
         print("ERROR: pedestrian not spawned.")
-
-
 
 def scenario_pedestrian_child( spawner):
     print(f"[SCENARIO] Spawning scenario 4")
