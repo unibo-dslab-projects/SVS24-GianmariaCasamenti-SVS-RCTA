@@ -62,8 +62,8 @@ def main():
             #Differents SCENARIOs
             #scenario_vehicle(spawner)
             #scenario_bicycle(spawner)
-            #scenario_pedestrian_adult(spawner)
-            scenario_pedestrian_child(spawner)
+            scenario_pedestrian_adult(spawner)
+            #scenario_pedestrian_child(spawner)
             time.sleep(2.0)
 
             print("MAIN [Starting loop]")
