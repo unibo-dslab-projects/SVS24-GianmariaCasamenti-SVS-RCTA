@@ -221,11 +221,11 @@ They are positioned to cover three distinct zones: Rear-Left, Rear-Center, and R
 Their yaw angles are set to create a wide field of view, minimizing blind spots. 
 The specific parameters, derived from config.py, are detailed in the following table.
 
-| Camera    | Position (X, Y, Z)  | Resolution   | FPS   | FOV (deg)   | Rotation (Pitch, Yaw)   |
-|:----------|:--------------------|:-------------|:------|:------------|:------------------------|
-| **Rear**  | `(-2.0, 0.0, 0.9)`  | 416x416      | 20    | 60          | `(0, 180)`              |
-| **Left**  | `(-2.0, 0.0, 0.9)`  | 416x416      | 20    | 60          | `(0, 240)`              |
-| **Right** | `(-2.0, 0.0, 0.9)`  | 416x416      | 20    | 60          | `(0, 120)`              |
+| Camera    | Position (X, Y, Z)  | Resolution   | FPS | FOV (deg)   | Rotation (Pitch, Yaw)   |
+|:----------|:--------------------|:-------------|:----|:------------|:------------------------|
+| **Rear**  | `(-2.0, 0.0, 0.9)`  | 416x416      | 5   | 60          | `(0, 180)`              |
+| **Left**  | `(-2.0, 0.0, 0.9)`  | 416x416      | 5   | 60          | `(0, 240)`              |
+| **Right** | `(-2.0, 0.0, 0.9)`  | 416x416      | 5   | 60          | `(0, 120)`              |
 
 ### Cameras view
 
