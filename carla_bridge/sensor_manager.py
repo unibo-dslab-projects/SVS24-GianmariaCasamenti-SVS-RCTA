@@ -19,14 +19,14 @@ class SensorManager:
         rgb_camera_bp.set_attribute('image_size_x', str(config.CAMERA_IMAGE_WIDTH))
         rgb_camera_bp.set_attribute('image_size_y', str(config.CAMERA_IMAGE_HEIGHT))
         rgb_camera_bp.set_attribute('fov', config.CAMERA_FOV)
-        rgb_camera_bp.set_attribute('sensor_tick','0.2')
+        rgb_camera_bp.set_attribute('sensor_tick','0.3')
 
         # Depth camera blueprint
         depth_camera_bp = self.blueprint_library.find('sensor.camera.depth')
         depth_camera_bp.set_attribute('image_size_x', str(config.CAMERA_IMAGE_WIDTH))
         depth_camera_bp.set_attribute('image_size_y', str(config.CAMERA_IMAGE_HEIGHT))
         depth_camera_bp.set_attribute('fov', config.CAMERA_FOV)
-        depth_camera_bp.set_attribute('sensor_tick', '0.2')
+        depth_camera_bp.set_attribute('sensor_tick', '0.3')
 
         # Spawn REAR cameras
         print("SENSOR_MANAGER [Spawning REAR cameras]")

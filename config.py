@@ -49,7 +49,7 @@ TARGET_SPAWN_TRANSFORM = carla.Transform(
     carla.Location(x=-35.0, y=-13.0, z=0.5),
     carla.Rotation(yaw=270)
 )
-TARGET_VELOCITY= carla.Vector3D(x=0, y=-4.56, z=0)  # 20 km/h = 5.56 m/s
+TARGET_VELOCITY= carla.Vector3D(x=0, y=-4.0, z=0)  # 20 km/h = 5.56 m/s
 
 #scenario2
 BICYCLE_MODEL = 'vehicle.diamondback.century'
