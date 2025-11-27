@@ -210,15 +210,12 @@ identified by YOLO despite the occlusion caused by cars blocking the view.
 
 ## Analysis of results
 
-[Video Result](https://drive.google.com/drive/folders/1lnfjyTRItry3ehBIEFgoYkfPKbvRfLZF?usp=sharing)
-
-
 | Scenario          | Distance to VUT (m) | Velocity (km/h) | First TTC alert (s) | First TTC alert - bad weather (s) |
 |-------------------|---------------------|-----------------|---------------------|-----------------------------------|
-| Car               | 15                  | 20              |                     |                                   |
-| Bike              | 15                  | 15              |                     |                                   |
-| Adult pedestrian  | 5                   | 5               |                     |                                   |
-| Child pedestrian  | 5                   | 10              |                     |                                   |
+| Car               | 15                  | 20              | 2.65                | 1.88                              |
+| Bike              | 15                  | 15              | 3.24                | 3.20                              |
+| Adult pedestrian  | 5                   | 5               | 2.95                | 2.83                              |
+| Child pedestrian  | 5                   | 10              | 3.15                | 3.36                              |
 
 
 

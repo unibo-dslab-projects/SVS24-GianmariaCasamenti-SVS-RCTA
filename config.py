@@ -49,7 +49,7 @@ TARGET_SPAWN_TRANSFORM = carla.Transform(
     carla.Location(x=-35.0, y=-13.0, z=0.5),
     carla.Rotation(yaw=270)
 )
-TARGET_VELOCITY= carla.Vector3D(x=0, y=-5.56, z=0)  # 20 km/h = 5.56 m/s
+TARGET_VELOCITY= carla.Vector3D(x=0, y=-4.56, z=0)  # 20 km/h = 5.56 m/s
 
 #scenario2
 BICYCLE_MODEL = 'vehicle.diamondback.century'
@@ -64,12 +64,12 @@ BICYCLE_VELOCITY= carla.Vector3D(x=0, y=-4.1, z=0)  # 15 km/h = 4.1 m/s
 PEDESTRIAN_MODEL = 'walker.pedestrian.0038'
 PEDESTRIAN_CHILD_MODEL = 'walker.pedestrian.0048'
 PEDESTRIAN_SPAWN_TRANSFORM = carla.Transform(
-    carla.Location(x=-33, y=-25.0, z=0.5),
+    carla.Location(x=-33, y=-20.0, z=0.5),
     carla.Rotation(yaw =270)
 )
 
-PEDESTRIAN_DESTINATION = carla.Location(x=-33.5, y=-37.0, z=0.5)
-PEDESTRIAN_WALK_SPEED = 1.39  # 5 km/h = 1.39 m/s
+PEDESTRIAN_DESTINATION = carla.Location(x=-33.5, y=-30.0, z=0.5)
+PEDESTRIAN_WALK_SPEED = 2  # 5 km/h = 1.39 m/s
 PEDESTRIAN_CHILD_WALK_SPEED = 2.7  # 10 km/h
 
 #_____________________________________CAMERAS SETTING________________________

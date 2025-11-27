@@ -50,8 +50,8 @@ def main():
             #print("MAIN [REAR callbacks registered]")
 
             # LEFT zone callbacks
-            #l_rgb.listen(lambda image: sync_and_callback("left", "rgb", image))
-            #l_depth.listen(lambda image: sync_and_callback("left", "depth", image))
+            l_rgb.listen(lambda image: sync_and_callback("left", "rgb", image))
+            l_depth.listen(lambda image: sync_and_callback("left", "depth", image))
             #print("MAIN [LEFT callbacks registered]")
 
             # RIGHT zone callbacks
@@ -60,10 +60,10 @@ def main():
             #print("MAIN [RIGHT callbacks registered]")
 
             #Differents SCENARIOs
-            scenario_vehicle(spawner)
+            #scenario_vehicle(spawner)
             #scenario_bicycle(spawner)
             #scenario_pedestrian_adult(spawner)
-            #scenario_pedestrian_child(spawner)
+            scenario_pedestrian_child(spawner)
             time.sleep(2.0)
 
             print("MAIN [Starting loop]")
